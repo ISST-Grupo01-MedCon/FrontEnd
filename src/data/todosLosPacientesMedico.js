@@ -7,7 +7,7 @@ export const data = [
     "Pablo Sánchez Olivares",
     "Luis Mendo Tomas",
     "María Asunción Santamaría Galdón",
-    "Jesús Faryle Ardanuy",
+    "Jesús Frayle Ardanuy",
     "Víctor Abraham Villagrá González",
     "Gabriel Huecas Toribio",
     "María de la Nava Maroto García",
