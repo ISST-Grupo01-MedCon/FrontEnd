@@ -28,6 +28,31 @@
   color: #61dafb;
 }
 
+.color-terciario {
+  background-color: #6bb549;
+}
+
+.color-secundario {
+  background-color: #1b6332;
+}
+
+.color-primario {
+  background-color: #23216e;
+  color: #ffffff;
+}
+
+.fuente-primaria {
+  font-family: "Open Sans", Arial, Helvetica, sans-serif;;
+}
+
+.fuente-secundaria {
+  font-family: Inconsolata, Calibri, Helvetica, sans-serif;;
+}
+
+.Boton-blanco {
+  color: #ffffff;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

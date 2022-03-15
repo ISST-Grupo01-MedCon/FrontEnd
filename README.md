@@ -1,7 +1,12 @@
-# Getting Started with Create React App
+# MedCon
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+En este repositorio se desarrolla el código fuente de MedCon, nuestro sistema de gestión de pacientes, consultas y salas de espera de un centro médico.
 
+Por ahora tenemos una versión preliminar con una interfaz muy similar a la interfaz final del prototipo del proyecto.
+
+Esta versión se está desarrollando con la versión LTS de Node (node v16.13.1 (npm v8.1.2)). Se puede utilizar el gestor de versiones de Node para utilizar esta versión:  `nvm use --lts`
+
+# Recursos de React:
 ## Available Scripts
 
 In the project directory, you can run:
