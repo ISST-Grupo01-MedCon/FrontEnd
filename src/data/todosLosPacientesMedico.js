@@ -13,4 +13,4 @@ export const data = [
     "María de la Nava Maroto García",
     "José Ramón Monejo Garai",
     "Juan Carlos Yelmo García"
-]
+];
