@@ -5,9 +5,11 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import {Navbar} from "react-bootstrap";
-
+import {useNavigate} from "react-router-dom";
+import {greenButtonStyle, whiteNoBorderButton} from "../styles";
 
 function Header(props) {
+    const navigate = useNavigate();
     return (
         <Navbar>
             <Container>
@@ -17,10 +19,10 @@ function Header(props) {
                     <Navbar.Text>
                              <Container fluid>
                                  <Row>
-                                     <Col md="auto"><a href="/"><Button variant="light" size="lg" style={{backgroundColor: "#FFFFFF", color: "#222222"}}>Home</Button></a></Col>
-                                     <Col md="auto"><a href="/medico/lista_siguientes_pacientes"><Button variant="light" size="lg" style={{backgroundColor: "#FFFFFF", color: "#222222"}}>Gestión de la cola</Button></a></Col>
-                                     <Col md="auto"><a href="/contacto"><Button variant="light" size="lg" style={{backgroundColor: "#FFFFFF", color: "#222222"}}>Contacto</Button></a></Col>
-                                     <Col md="auto"><a href="/medico/login"><Button variant="light" size="lg" style={{backgroundColor: "#6bb549", color: "#FFFFFF"}}>Logout</Button></a></Col>
+                                     <Col md="auto"><Button onClick={() => navigate("/")} variant="light" size="lg" style={whiteNoBorderButton}>Home</Button></Col>
+                                     <Col md="auto"><Button onClick={() => navigate("/medico/lista_siguientes_pacientes")} variant="light" size="lg" style={whiteNoBorderButton}>Gestión de la cola</Button></Col>
+                                     <Col md="auto"><Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteNoBorderButton}>Contacto</Button></Col>
+                                     <Col md="auto"><Button onClick={() => navigate("/medico/login")} variant="light" size="lg" style={greenButtonStyle}>Logout</Button></Col>
                                  </Row>
                              </Container>
                     </Navbar.Text>

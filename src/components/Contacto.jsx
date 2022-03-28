@@ -1,4 +1,5 @@
 import {Col, Row, Container, Form, Button, Image} from "react-bootstrap";
+import {greenButtonStyle} from "../styles";
 
 export const Contacto = (props) => {
   return(
@@ -39,14 +40,14 @@ export const Contacto = (props) => {
                         <Form.Control as="textarea" rows={10} />
                     </Form.Group>
 
-                    <Button variant="light" size="lg" style={{backgroundColor: "#6bb549", color: "#FFFFFF"}} type="submit">
+                    <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
                         Enviar
                     </Button>
                 </Form>
             </Col>
             <Col>
                 <Image fluid width={1000} height={1000} src="/imagenSecundaria.svg" />
-        </Col>
+            </Col>
           </Row>
       </Container>
   );

@@ -1,39 +1,52 @@
-import {data} from '../../data/todosLosPacientesMedico';
 import React from "react";
-import {Col, Container, Row, Table} from "react-bootstrap";
-
-let datos = JSON.parse(JSON.stringify(data));
+import {Col, Container, OverlayTrigger, Row, Table, Tooltip} from "react-bootstrap";
+import {useNavigate} from "react-router-dom";
+import {headerStyle, ladoIconosNormales, transparentButtonStyle} from "../../styles";
 
 const Fila = (props) => {
+    const navigate = useNavigate();
     return (<tr>
-        <td><img width={50} height={50} alt={"Drag"} src="/drag.png"/></td><td>{props.nombre}</td><td><img width={50} height={50} alt={"Tick"} src="/tick.png"/><img width={50} height={50} alt={"Cruz"} src="/cruz.png"/><img width={50} height={50} alt={"Ajustes"} src="/ajustes.png"/></td>
+        <td>{props.nombre}</td>
+        <td>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("registrado", props.idPaciente, "tp")}><OverlayTrigger placement="top" overlay={<Tooltip>Registrar asistencia</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Asistencia"} src="/asistencia.svg"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => navigate(`/medico/detalles_paciente/${props.idPaciente}?from=tp`)}><OverlayTrigger placement="top" overlay={<Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
+        </td>
     </tr>);
 };
 
-const Filas = () => {
+const Filas = (props) => {
+    const getIDPaciente = (nombrePaciente) => {
+        for (let id in props.datosTodosLosPacientesSinOrdenar) {
+            if (nombrePaciente === props.datosTodosLosPacientesSinOrdenar[id])
+                return id;
+        }
+        return -1;
+    };
+
     return(
-        datos.map((nombrePersona, idx) => {
-            return(<Fila key={idx} nombre={nombrePersona}/>);
+        props.datosTodosLosPacientes.map((nombrePaciente, pos) => {
+            return(<Fila key={pos} idPaciente={getIDPaciente(nombrePaciente)} nombre={nombrePaciente} cambiarModoPaciente={props.cambiarModoPaciente}/>
+            );
         })
     );
 }
 
 export const ListaCompletaPacientesMedico = (props) => {
+    let listaOrdenadaAlfabeticamente = props.ordenarAlfabeticamente(JSON.parse(JSON.stringify(props.datosTodosLosPacientes)));
     return(
         <Container>
             <Row>
-                <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Lista completa de pacientes</h1></Col>
+                <Col style={headerStyle}><h1>Lista completa de pacientes</h1></Col>
             </Row>
             <Table responsive>
                 <thead>
                 <tr>
-                    <th>Mover</th>
                     <th>Nombre completo</th>
                     <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                    <Filas/>
+                    <Filas datosTodosLosPacientes={listaOrdenadaAlfabeticamente} datosTodosLosPacientesSinOrdenar={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
                 </tbody>
             </Table>
         </Container>);

@@ -1,11 +1,14 @@
 import {Button, Col, Container, Form, Row} from "react-bootstrap";
 import React from "react";
+import {useNavigate} from "react-router-dom";
+import {greenButtonStyle, headerStyle, whiteButtonStyle} from "../../styles";
 
 export const LoginMedico = (props) => {
+    const navigate = useNavigate();
     return(
         <Container>
             <Row>
-                <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación</h1></Col>
+                <Col style={headerStyle}><h1>Identificación</h1></Col>
             </Row>
             <Row>
                 <Form>
@@ -22,10 +25,10 @@ export const LoginMedico = (props) => {
                     </Row>
                     <Row xs={4} className="justify-content-md-center">
                         <Col>
-                            <Button variant="light" size="lg" style={{backgroundColor: "#FFFFFF", color: "#222222"}}>Incidencia</Button>
+                            <Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteButtonStyle}>Incidencia</Button>
                         </Col>
                         <Col>
-                            <Button variant="light" size="lg" style={{backgroundColor: "#6bb549", color: "#FFFFFF"}} type="submit">
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
                                 Login
                             </Button>
                         </Col>

@@ -1,5 +1,6 @@
 import {Button, Col, Container, Form, Row} from "react-bootstrap";
 import React from "react";
+import {greenButtonStyle} from "../../styles";
 
 export const LoginKiosko = (props) => {
     return(
@@ -23,7 +24,7 @@ export const LoginKiosko = (props) => {
                     </Row>
                     <Row xs={4} className="justify-content-md-center">
                         <Col>
-                            <Button variant="light" size="lg" style={{backgroundColor: "#6bb549", color: "#FFFFFF"}} type="submit">
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
                                 Registrar asistencia
                             </Button>
                         </Col>
