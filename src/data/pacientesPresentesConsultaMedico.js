@@ -1,8 +1,8 @@
 export const data = [
-    ["A01", "María Asunción Santamaría Galdón"],
-    ["D03", "Jesús Frayle Ardanuy"],
-    ["H69", "Víctor Abraham Villagrá González"],
-    ["X43", "Gabriel Huecas Toribio"],
-    ["B02", "María de la Nava Maroto García"],
-    ["G54", "Juan Carlos Yelmo García"]
+    ["A01", 7],
+    ["D03", 8],
+    ["H69", 9],
+    ["X43", 10],
+    ["B02", 11],
+    ["G54", 13]
 ];
