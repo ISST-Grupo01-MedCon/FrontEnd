@@ -1,6 +1,6 @@
 import './App.css';
 import Header from './components/Header'
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import {BrowserRouter as Router, Routes, Route, useLocation} from "react-router-dom";
@@ -18,10 +18,8 @@ import {DetallesPaciente} from "./components/ConsultaMedico/DetallesPaciente";
 import {RecetasPaciente} from "./components/ConsultaMedico/RecetasPaciente";
 import {PruebasMedicasPaciente} from "./components/ConsultaMedico/PruebasMedicasPaciente";
 import {NuevaConsulta} from "./components/ConsultaMedico/NuevaConsulta";
+
 //Datos
-import {data as dataTodosLosPacientes} from './data/todosLosPacientesMedico';
-import {data as dataSiguientesPacientes} from './data/pacientesPresentesConsultaMedico';
-import {data as dataPacientesNoAtendidos} from './data/pacientesNoAtendidosMedico';
 import {data as dataHistoriaClinica} from './data/historiaClinica';
 
 function useQuery() {
@@ -31,9 +29,9 @@ function useQuery() {
 }
 
 function App() {
-  const [datosTodosLosPacientes] = useState(JSON.parse(JSON.stringify(dataTodosLosPacientes)));
-  const [datosSiguientesPacientes, setDatosSiguientesPacientes] = useState(JSON.parse(JSON.stringify(dataSiguientesPacientes)));
-  const [datosPacientesNoAtendidos, setPacientesNoAtendidos] = useState(JSON.parse(JSON.stringify(dataPacientesNoAtendidos)));
+  const [datosTodosLosPacientes, setDatosTodosLosPacientes] = useState([]);
+  const [datosSiguientesPacientes, setDatosSiguientesPacientes] = useState([]);
+  const [datosPacientesNoAtendidos, setPacientesNoAtendidos] = useState([]);
   const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica)));
 
     const generarIdentificadorUnico = () => {
@@ -61,7 +59,7 @@ function App() {
         switch (modo) {
             case "atendido":
                 nuevoArraySP.map((array, pos) => {
-                    if (array[1] === parseInt(idPaciente))
+                    if (parseInt(array[1]) === parseInt(idPaciente))
                         idx = pos;
                     return pos;
                 });
@@ -71,14 +69,14 @@ function App() {
             case "registrado":
                 if (desde === "tp" || desde === "pd") {
                     for (let array of nuevoArraySP) {
-                        if (array[1] === parseInt(idPaciente))
+                        if (parseInt(array[1]) === parseInt(idPaciente))
                             return array;
                     }
                     nuevoArraySP.push([generarIdentificadorUnico(), parseInt(idPaciente)]);
                     setDatosSiguientesPacientes(nuevoArraySP);
                     if (desde === "pd") {
                         nuevoArrayPD.map((idP, pos) => {
-                            if (idP === parseInt(idPaciente))
+                            if (parseInt(idP) === parseInt(idPaciente))
                                 idx = pos;
                             return pos;
                         });
@@ -89,7 +87,7 @@ function App() {
                 break;
             case "descartado":
                 nuevoArraySP.map((array, pos) => {
-                    if (array[1] === parseInt(idPaciente))
+                    if (parseInt(array[1]) === parseInt(idPaciente))
                         idx = pos;
                     return pos;
                 });
@@ -132,6 +130,36 @@ function App() {
             arraySP.splice(posActual, 1);
         return (arraySP[0] === undefined ? -1 : arraySP[0][1]);
     };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await (await fetch('http://localhost:8080/consultas')).json();
+            return data;
+        }
+
+        //Recogemos los datos del BackEnd de MedCon
+        fetchData()
+            .catch(console.error)
+            .then(data => {
+                let arraySP = [];
+                let arrayPD = [];
+                let arrayTLP = [];
+
+                // Clasificamos los pacientes en función de sus atributos
+                for (let i in data) {
+                    arrayTLP.push(data[i].paciente);
+                    if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "") && data[i].descartado) {
+                        arrayPD.push(i);
+                    } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "")) {
+                        arraySP.push([data[i].ticketId, i]);
+                    }
+                }
+
+                setDatosTodosLosPacientes(arrayTLP);
+                setDatosSiguientesPacientes(arraySP);
+                setPacientesNoAtendidos(arrayPD);
+            });
+    }, []);
 
     return (
       <Router>
