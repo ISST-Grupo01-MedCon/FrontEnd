@@ -1,12 +1,12 @@
 import {Button, Col, Container, Form, Row} from "react-bootstrap";
 import React from "react";
-import {greenButtonStyle} from "../../styles";
+import {greenButtonStyle, headerStyle} from "../../styles";
 
 export const LoginKiosko = (props) => {
     return(
         <Container>
             <Row>
-                <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación</h1></Col>
+                <Col style={headerStyle}><h1>Identificación</h1></Col>
             </Row>
             <Row>
                 <Form>
