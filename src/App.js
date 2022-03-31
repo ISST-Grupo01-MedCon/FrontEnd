@@ -52,7 +52,7 @@ function App() {
         return identificador;
     };
 
-    const cambiarModoPaciente = (modo, idPaciente, desde = undefined) => {
+    const cambiarModoPaciente = async (modo, idPaciente, desde = undefined) => {
         let nuevoArraySP = JSON.parse(JSON.stringify(datosSiguientesPacientes));
         let nuevoArrayPD = JSON.parse(JSON.stringify(datosPacientesNoAtendidos));
         let idx = -1;
@@ -86,6 +86,14 @@ function App() {
                 }
                 break;
             case "descartado":
+                await fetch('/consultas/'+idPaciente, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                });
+            
                 nuevoArraySP.map((array, pos) => {
                     if (parseInt(array[1]) === parseInt(idPaciente))
                         idx = pos;
@@ -147,11 +155,11 @@ function App() {
 
                 // Clasificamos los pacientes en función de sus atributos
                 for (let i in data) {
-                    arrayTLP.push(data[i].paciente);
-                    if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "") && data[i].descartado) {
-                        arrayPD.push(i);
+                    arrayTLP[parseInt(data[i].id)] = data[i].paciente;
+                    if (data[i].descartado) {
+                        arrayPD.push(parseInt(data[i].id));
                     } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "")) {
-                        arraySP.push([data[i].ticketId, i]);
+                        arraySP.push([data[i].ticketId, parseInt(data[i].id)]);
                     }
                 }
 
