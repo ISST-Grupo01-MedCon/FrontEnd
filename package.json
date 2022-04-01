@@ -2,6 +2,7 @@
   "name": "medcon",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8080/",
   "dependencies": {
     "@dnd-kit/core": "^5.0.1",
     "@dnd-kit/sortable": "^6.0.0",
