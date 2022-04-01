@@ -6,21 +6,16 @@ import { useNavigate } from "react-router-dom";
 
 export const LoginKioskodni = (props) => {
     const navigate = useNavigate();
-    const [dni, setDni] = useState('');
+    const [dni, setDni] = useState("");
+    const [ticket, setTicket] = useState();
     
     const onChangeDni = (event) =>{
         setDni(event.target.value);
     }
     const submitdni = (event) => {
-        let dnis = props.dnis;
-        let dni = event.target.value;
-        console.log("el dni es"+dni);
-        console.log("los dniss"+dnis);
-        for(let i in dnis){
-            if (i == dni){
-                props.buscarid(dni);
-            }
-        }
+        event.preventDefault();
+        props.cambiarModoPaciente("registrado", dni, "kiosko");
+        navigate("/paciente/ticket/"+props.getIDPacienteKiosko(dni)+"?dni="+dni);
     }
     return(
         <Container>
@@ -39,7 +34,7 @@ export const LoginKioskodni = (props) => {
                     </Row>
                     <Row xs={4} className="justify-content-md-center">
                         <Col>
-                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit" onClick={() => navigate("/paciente/ticket")} ticketId = {props.ticketId}>
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
                                 Registrar asistencia
                             </Button>
                         </Col>

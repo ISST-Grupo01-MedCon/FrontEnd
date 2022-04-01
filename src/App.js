@@ -3,7 +3,7 @@ import Header from './components/Header'
 import React, {useState, useEffect} from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import {HashRouter as Router, Routes, Route, useLocation} from "react-router-dom";
+import {HashRouter as Router, Routes, Route, useLocation, useNavigate} from "react-router-dom";
 import {ListaSiguientesPacientesMedico} from "./components/ConsultaMedico/ListaSiguientesPacientesMedico";
 import {ListaCompletaPacientesMedico} from "./components/ConsultaMedico/ListaCompletaPacientesMedico";
 import {ListaPacientesNoAtendidosMedico} from "./components/ConsultaMedico/ListaPacientesNoAtendidosMedico";
@@ -57,14 +57,15 @@ function App() {
         return identificador;
     };
 
-    const cambiarModoPaciente = async (modo, idPaciente, desde = undefined) => {
+    const cambiarModoPaciente = async (modo, idODNIPaciente, desde = undefined) => {
         let nuevoArraySP = JSON.parse(JSON.stringify(datosSiguientesPacientes));
         let nuevoArrayPD = JSON.parse(JSON.stringify(datosPacientesNoAtendidos));
         let idx = -1;
+        console.log("modo:"+modo+"idODNIPaciente:"+idODNIPaciente);
         switch (modo) {
             case "atendido":
                 nuevoArraySP.map((array, pos) => {
-                    if (parseInt(array[1]) === parseInt(idPaciente))
+                    if (parseInt(array[1]) === parseInt(idODNIPaciente))
                         idx = pos;
                     return pos;
                 });
@@ -74,24 +75,58 @@ function App() {
             case "registrado":
                 if (desde === "tp" || desde === "pd") {
                     for (let array of nuevoArraySP) {
-                        if (parseInt(array[1]) === parseInt(idPaciente))
+                        if (parseInt(array[1]) === parseInt(idODNIPaciente))
                             return array;
                     }
-                    nuevoArraySP.push([generarIdentificadorUnico(), parseInt(idPaciente)]);
+
+                    console.log("modo2:"+modo+"idODNIPaciente:"+idODNIPaciente);
+                    console.log("array antes de cambiar"+ nuevoArraySP);
+                    nuevoArraySP.push([generarIdentificadorUnico(), parseInt(idODNIPaciente)]);
                     setDatosSiguientesPacientes(nuevoArraySP);
+                    console.log("array despues de cambiar"+ nuevoArraySP);
                     if (desde === "pd") {
                         nuevoArrayPD.map((idP, pos) => {
-                            if (parseInt(idP) === parseInt(idPaciente))
+                            if (parseInt(idP) === parseInt(idODNIPaciente))
                                 idx = pos;
                             return pos;
                         });
                         nuevoArrayPD.splice(idx, 1);
                         setPacientesNoAtendidos(nuevoArrayPD);
                     }
+                } else if (desde === "kiosko") {
+                    console.log("submit dentro");
+                    pacientes.forEach((value, key) =>{
+                        console.log("antes del if");
+                        if(value[0] === idODNIPaciente){
+                            console.log("dentro ya");
+                            let ticketID = generarIdentificadorUnico();
+                            nuevoArraySP.push([ticketID, parseInt(value[1])]);
+                            setDatosSiguientesPacientes(nuevoArraySP);
+                            console.log("arraysp:"+nuevoArraySP);
+                            console.log("value1:"+value[1]);
+                            /*await fetch('/paciente/ticektid'+parseInt(value[1]), {
+                                method: 'PUT',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body :{
+                                    id: "0",
+                                    fecha: "",
+                                    medico: "",
+                                    paciente: "",
+                                    razonConsulta: "",
+                                    descartado: false,
+                                    ticketId: ticketID
+                                }
+                            });*/
+                            
+                        }
+                    })
                 }
                 break;
             case "descartado":
-                await fetch('/consultas/'+idPaciente, {
+                await fetch('/consultas/'+idODNIPaciente, {
                     method: 'PUT',
                     headers: {
                         'Accept': 'application/json',
@@ -100,12 +135,12 @@ function App() {
                 });
             
                 nuevoArraySP.map((array, pos) => {
-                    if (parseInt(array[1]) === parseInt(idPaciente))
+                    if (parseInt(array[1]) === parseInt(idODNIPaciente))
                         idx = pos;
                     return pos;
                 });
                 nuevoArraySP.splice(idx, 1);
-                nuevoArrayPD.push(idPaciente);
+                nuevoArrayPD.push(idODNIPaciente);
                 setDatosSiguientesPacientes(nuevoArraySP);
                 setPacientesNoAtendidos(nuevoArrayPD);
                 break;
@@ -144,6 +179,15 @@ function App() {
         return (arraySP[0] === undefined ? -1 : arraySP[0][1]);
     };
 
+const getIDPacienteKiosko = (dni) =>{
+    pacientes.forEach((value, key) =>{
+        console.log("antes del if");
+        if(value[0] === dni){
+            return parseInt(value[1]);  
+        }
+    })
+}
+
     useEffect(() => {
         const fetchData = async () => {
             const data = await (await fetch('http://localhost:8080/consultas')).json();
@@ -180,11 +224,11 @@ function App() {
             .catch(console.error)
             .then(datad => {
                 let arraydni = [];
-                let arraypacientes = new Map();
+                let arraypacientes = [];
                 console.log("los dnis del back"+datad);
                 // Clasificamos los pacientes en función de sus atributos
                 for (let i in datad) {
-                    arraypacientes.set(datad[i].dni,datad[i].citas[0]);
+                    arraypacientes.push([datad[i].dni,datad[i].citas[0]]);
                     arraydni.push(datad[i].dni);
                     console.log("algoooooo  "+  arraydni);
                     console.log("algoooooo  "+  arraypacientes);
@@ -209,9 +253,9 @@ function App() {
                 <Route path="/medico/pruebas_paciente/:id" element={<><Header/><PruebasMedicasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></>} />
 
                 <Route path="/paciente/login" element={<LoginKiosko />} />
-                <Route path="/paciente/login/dni" element={<LoginKioskodni />} useQuery={useQuery} pacientes={pacientes} datosTodosLosPacientes={datosTodosLosPacientes} generar = {()=>{generarIdentificadorUnico()}}/>
-                <Route path="/paciente/login/cipa" element={<LoginKioskocipa />} useQuery={useQuery} />
-                <Route path="/paciente/ticket" element={<PacienteRegistradoKiosko identificador={generarIdentificadorUnico()}/>} />
+                <Route path="/paciente/login/dni" element={<LoginKioskodni useQuery={useQuery} pacientes={pacientes} datosTodosLosPacientes={datosTodosLosPacientes} cambiarModoPaciente={cambiarModoPaciente} datosSiguientesPacientes={datosSiguientesPacientes}/>} />
+                <Route path="/paciente/login/cipa" element={<LoginKioskocipa useQuery={useQuery}/>}  />
+                <Route path="/paciente/ticket/:id" element={<PacienteRegistradoKiosko useQuery={useQuery} datosSiguientesPacientes={datosSiguientesPacientes} getIDPacienteKiosko = {getIDPacienteKiosko}/>}  />
 
                 <Route path="/sala_de_espera" element={<ListaSalaDeEspera />} />
 
