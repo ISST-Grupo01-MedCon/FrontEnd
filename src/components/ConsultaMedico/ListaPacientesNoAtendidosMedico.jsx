@@ -17,14 +17,14 @@ const Fila = (props) => {
 
 const Filas = (props) => {
     return(
-        props.datosPacientesNoAtendidos.map((idPaciente, pos) => {
-            return(<Fila key={pos} idPaciente={idPaciente} nombre={props.datosTodosLosPacientes[idPaciente]}  cambiarModoPaciente={props.cambiarModoPaciente}/>);
-        })
+        props.datosPacientesNoAtendidos ? props.datosPacientesNoAtendidos.map((paciente, pos) => {
+            return(<Fila key={pos} idPaciente={paciente.id} nombre={props.datosTodosLosPacientes[paciente.id].nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>);
+        }) : <></>
     );
 }
 
 export const ListaPacientesNoAtendidosMedico = (props) => {
-    let listaOrdenadaAlfabeticamente = props.ordenarAlfabeticamente(JSON.parse(JSON.stringify(props.datosPacientesNoAtendidos)), "ids");
+    let listaOrdenadaAlfabeticamente = props.ordenarAlfabeticamente(JSON.parse(JSON.stringify(props.datosPacientesNoAtendidos)), "ticketIDs");
     return(
         <Container>
             <Row>
@@ -38,7 +38,8 @@ export const ListaPacientesNoAtendidosMedico = (props) => {
                 </tr>
                 </thead>
                 <tbody>
-                    <Filas datosPacientesNoAtendidos={listaOrdenadaAlfabeticamente} datosTodosLosPacientes={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
+                    <Filas datosPacientesNoAtendidos={listaOrdenadaAlfabeticamente} datosTodosLosPacientes={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}
+                           getIDPacienteFromTicketID={props.getIDPacienteFromTicketID}/>
                 </tbody>
             </Table>
         </Container>);

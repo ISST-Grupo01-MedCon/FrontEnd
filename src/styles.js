@@ -32,6 +32,13 @@ export const blueButton = {
     color: "#FFFFFF"
 };
 
+export const blueBigButton = {
+    ...blueButton,
+    padding: 100,
+    fontSize:35,
+    border: "none"
+}
+
 export const movingRowStyle = {
     backgroundColor: "#FFFFFF",
     opacity: 0.9

@@ -17,15 +17,15 @@ const Fila = (props) => {
 const Filas = (props) => {
     const getIDPaciente = (nombrePaciente) => {
         for (let id in props.datosTodosLosPacientesSinOrdenar) {
-            if (nombrePaciente === props.datosTodosLosPacientesSinOrdenar[id])
+            if (nombrePaciente === props.datosTodosLosPacientesSinOrdenar[id].nombre)
                 return id;
         }
         return -1;
     };
 
     return(
-        props.datosTodosLosPacientes.map((nombrePaciente, pos) => {
-            return(<Fila key={pos} idPaciente={getIDPaciente(nombrePaciente)} nombre={nombrePaciente} cambiarModoPaciente={props.cambiarModoPaciente}/>
+        props.datosTodosLosPacientes.map((paciente, pos) => {
+            return(<Fila key={pos} idPaciente={pos} nombre={paciente.nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>
             );
         })
     );

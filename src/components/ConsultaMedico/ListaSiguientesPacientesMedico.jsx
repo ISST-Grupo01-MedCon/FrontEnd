@@ -30,8 +30,9 @@ import {
  */
 const getIndexFromIdentificador = (array, identificador) => {
     for (let i in array) {
-        if (array[i][0] === identificador)
+        if (array[i].ticketID === identificador) {
             return i;
+        }
     }
     return -1;
 };
@@ -63,9 +64,9 @@ const Fila = (props) => {
 };
 
 const Filas = (props) => {
-    return(props.datosSiguientesPacientes.map((arrPaciente, pos) => {
-        return(<Fila key={pos} idPaciente={arrPaciente[1]} identificador={arrPaciente[0]}
-                     nombre={props.datosTodosLosPacientes[arrPaciente[1]]} cambiarModoPaciente={props.cambiarModoPaciente}/>);
+    return(props.datosSiguientesPacientes.map((paciente, pos) => {
+        return(<Fila key={pos} idPaciente={paciente.id} identificador={paciente.ticketID}
+                     nombre={props.datosTodosLosPacientes[paciente.id].nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>);
     }));
 }
 
@@ -100,7 +101,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
 
     const llamarPrimerPaciente = () => {
         if (props.datosSiguientesPacientes.length > 0) {
-            let idPaciente = props.datosSiguientesPacientes[0][1];
+            let idPaciente = props.datosSiguientesPacientes[0].id;
             navigate("/medico/detalles_paciente/"+idPaciente);
             props.cambiarModoPaciente("atendido", idPaciente);
         }
@@ -131,7 +132,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
                             <Filas datosSiguientesPacientes={props.datosSiguientesPacientes} datosTodosLosPacientes={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
                         </tbody>
                     </Table>
-                    <DragOverlay wrapperElement="div">{activeId ? <Table responsive style={movingRowStyle}><tbody><Fila tooltips="no" idPaciente={0} identificador={activeId} nombre={props.datosTodosLosPacientes[props.datosSiguientesPacientes[getIndexFromIdentificador(props.datosSiguientesPacientes, activeId)][1]]}/></tbody></Table> : null}</DragOverlay>
+                    <DragOverlay wrapperElement="div">{activeId ? <Table responsive style={movingRowStyle}><tbody><Fila tooltips="no" idPaciente={0} identificador={activeId} nombre={props.datosTodosLosPacientes[props.datosSiguientesPacientes[getIndexFromIdentificador(props.datosSiguientesPacientes, activeId)].id].nombre}/></tbody></Table> : null}</DragOverlay>
                 </Container>
             </SortableContext>
         </DndContext>);

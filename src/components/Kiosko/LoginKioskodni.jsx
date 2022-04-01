@@ -1,5 +1,5 @@
 import {Button, Col, Container, Form, Row} from "react-bootstrap";
-import React, {useState, useEffect} from "react";
+import React, {useState} from "react";
 import {greenButtonStyle} from "../../styles";
 import { useNavigate } from "react-router-dom";
 
@@ -7,15 +7,14 @@ import { useNavigate } from "react-router-dom";
 export const LoginKioskodni = (props) => {
     const navigate = useNavigate();
     const [dni, setDni] = useState("");
-    const [ticket, setTicket] = useState();
     
     const onChangeDni = (event) =>{
         setDni(event.target.value);
     }
     const submitdni = (event) => {
         event.preventDefault();
-        props.cambiarModoPaciente("registrado", dni, "kiosko");
-        navigate("/paciente/ticket/"+props.getIDPacienteKiosko(dni)+"?dni="+dni);
+        props.cambiarModoPaciente("registrado", dni, "kioskoDNI");
+        navigate("/paciente/ticket/"+props.getIDPacienteKiosko(dni));
     }
     return(
         <Container>
@@ -23,12 +22,12 @@ export const LoginKioskodni = (props) => {
                 <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación DNI</h1></Col>
             </Row>
             <Row>
-                <Form onSubmit = {(event)=>{console.log("algo"); submitdni(event)}}>
+                <Form onSubmit={(event) => {submitdni(event)}}>
                     <Row className="justify-content-md-center">
                         <Col xs={4}>
                             <img alt="Logo MedCon" src="/logo.png"/>
                             <Form.Group className="mb-3" controlId="formBasicPassword" >
-                                <Form.Control type="plainText" placeholder="NIF o NIE" onChange ={onChangeDni} value={dni}/>
+                                <Form.Control type="plainText" placeholder="NIF o NIE" onChange={onChangeDni} value={dni}/>
                             </Form.Group>
                         </Col>
                     </Row>
