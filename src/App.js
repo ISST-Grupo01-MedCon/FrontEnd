@@ -18,6 +18,8 @@ import {DetallesPaciente} from "./components/ConsultaMedico/DetallesPaciente";
 import {RecetasPaciente} from "./components/ConsultaMedico/RecetasPaciente";
 import {PruebasMedicasPaciente} from "./components/ConsultaMedico/PruebasMedicasPaciente";
 import {NuevaConsulta} from "./components/ConsultaMedico/NuevaConsulta";
+import {LoginKioskocipa} from "./components/Kiosko/LoginKioskocipa";
+import {LoginKioskodni} from "./components/Kiosko/LoginKioskodni";
 
 //Datos
 import {data as dataHistoriaClinica} from './data/historiaClinica';
@@ -33,6 +35,9 @@ function App() {
   const [datosSiguientesPacientes, setDatosSiguientesPacientes] = useState([]);
   const [datosPacientesNoAtendidos, setPacientesNoAtendidos] = useState([]);
   const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica)));
+  const [pacientes, setPacientes] = useState([]);
+  const [dnis, setdnis] = useState([]);
+
 
     const generarIdentificadorUnico = () => {
         const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
@@ -144,6 +149,10 @@ function App() {
             const data = await (await fetch('http://localhost:8080/consultas')).json();
             return data;
         }
+        const fetchDatad = async () => {
+            const datad = await (await fetch('http://localhost:8080/paciente')).json();
+            return datad;
+        }
 
         //Recogemos los datos del BackEnd de MedCon
         fetchData()
@@ -167,6 +176,22 @@ function App() {
                 setDatosSiguientesPacientes(arraySP);
                 setPacientesNoAtendidos(arrayPD);
             });
+        fetchDatad()
+            .catch(console.error)
+            .then(datad => {
+                let arraydni = [];
+                let arraypacientes = new Map();
+                console.log("los dnis del back"+datad);
+                // Clasificamos los pacientes en función de sus atributos
+                for (let i in datad) {
+                    arraypacientes.set(datad[i].dni,datad[i].citas[0]);
+                    arraydni.push(datad[i].dni);
+                    console.log("algoooooo  "+  arraydni);
+                    console.log("algoooooo  "+  arraypacientes);
+                }
+                setdnis(arraydni);
+                setPacientes(arraypacientes);
+            });
     }, []);
 
     return (
@@ -184,12 +209,14 @@ function App() {
                 <Route path="/medico/pruebas_paciente/:id" element={<><Header/><PruebasMedicasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></>} />
 
                 <Route path="/paciente/login" element={<LoginKiosko />} />
+                <Route path="/paciente/login/dni" element={<LoginKioskodni />} useQuery={useQuery} pacientes={pacientes} datosTodosLosPacientes={datosTodosLosPacientes} generar = {()=>{generarIdentificadorUnico()}}/>
+                <Route path="/paciente/login/cipa" element={<LoginKioskocipa />} useQuery={useQuery} />
                 <Route path="/paciente/ticket" element={<PacienteRegistradoKiosko identificador={generarIdentificadorUnico()}/>} />
 
                 <Route path="/sala_de_espera" element={<ListaSalaDeEspera />} />
 
                 <Route path="/contacto" element={<><Header/><Contacto /><Footer/></>} />
-                <Route path="/" element={<><Header/><Home /><Footer/></>} />
+                <Route path="/" element={<LoginKiosko/>} />
             </Routes>
         </div>
       </Router>
