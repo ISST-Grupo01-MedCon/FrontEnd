@@ -20,7 +20,9 @@ import {PruebasMedicasPaciente} from "./components/ConsultaMedico/PruebasMedicas
 import {NuevaConsulta} from "./components/ConsultaMedico/NuevaConsulta";
 import {LoginKioskocipa} from "./components/Kiosko/LoginKioskocipa";
 import {LoginKioskodni} from "./components/Kiosko/LoginKioskodni";
-
+import {HeaderHome} from "./components/HeaderHome";
+import {HomePreLogin} from "./components/HomePreLogin";
+import {HeaderHomePreLogin} from "./components/HeaderHomePreLogin";
 //Datos
 import {data as dataHistoriaClinica} from './data/historiaClinica';
 
@@ -36,6 +38,7 @@ function App() {
   const [datosPacientesNoAtendidos, setPacientesNoAtendidos] = useState([]);
   const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica)));
   const [datosDescargados, setDatosDescargados] = useState(false);
+  const [doc, setDoc] = useState("");
 
 
     const generarIdentificadorUnico = () => {
@@ -276,6 +279,7 @@ function App() {
                         arraySP.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
                     }
                 }
+                setDoc(data[0].medico);
                 setDatosSiguientesPacientes(arraySP);
                 setPacientesNoAtendidos(arrayPD);
             });
@@ -306,7 +310,8 @@ function App() {
                 <Route path="/sala_de_espera" element={datosDescargados? <ListaSalaDeEspera /> : <></>} />
 
                 <Route path="/contacto" element={datosDescargados? <><Header/><Contacto /><Footer/></> : <></>} />
-                <Route path="/" element={datosDescargados? <><Header/><Home /><Footer/></> : <></>} />
+                <Route path="/Home" element={<><HeaderHome/><Home cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente} doc={doc}/><Footer/></>} ></Route>
+                <Route path="/" element={<><HeaderHomePreLogin/><HomePreLogin /><Footer/></>} />
             </Routes>
           </div> : <div></div>}
       </Router>

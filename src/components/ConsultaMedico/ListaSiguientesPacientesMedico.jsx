@@ -116,7 +116,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
                     </Row>
                     <Row>
                         <Col xs={{ order: 'last' }}><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_completa_pacientes")}>Lista completa pacientes</Button></Col>
-                        <Col xs><Button onClick={llamarPrimerPaciente} variant={"light"}  size="lg" style={blueButton}>Llamar siguiente paciente</Button></Col>
+                        <Col xs><Button onClick={llamarPrimerPaciente} variant={"light"}  size="lg" style={blueButton}>SIGUIENTE PACIENTE</Button></Col>
                         <Col xs={{ order: 'first' }}><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_pacientes_descartados")}>Pacientes descartados</Button></Col>
                     </Row>
                     <Table responsive>

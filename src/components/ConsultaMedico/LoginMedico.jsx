@@ -19,7 +19,7 @@ export const LoginMedico = (props) => {
                             </Form.Group>
 
                             <Form.Group className="mb-3" controlId="formBasicPassword">
-                                <Form.Control type="password" placeholder="NIF o NIE" />
+                                <Form.Control type="password" placeholder="Contraseña" />
                             </Form.Group>
                         </Col>
                     </Row>
@@ -28,7 +28,7 @@ export const LoginMedico = (props) => {
                             <Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteButtonStyle}>Incidencia</Button>
                         </Col>
                         <Col>
-                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit" onClick={() => navigate("/Home")}>
                                 Login
                             </Button>
                         </Col>

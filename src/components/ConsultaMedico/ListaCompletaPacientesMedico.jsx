@@ -1,7 +1,8 @@
 import React from "react";
-import {Col, Container, OverlayTrigger, Row, Table, Tooltip} from "react-bootstrap";
+import {Col, Container, OverlayTrigger, Row, Table, Tooltip, Button} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
-import {headerStyle, ladoIconosNormales, transparentButtonStyle} from "../../styles";
+import {headerStyle, ladoIconosNormales, transparentButtonStyle, linkButtonStyle} from "../../styles";
+
 
 const Fila = (props) => {
     const navigate = useNavigate();
@@ -32,11 +33,14 @@ const Filas = (props) => {
 }
 
 export const ListaCompletaPacientesMedico = (props) => {
+    const navigate = useNavigate();
     let listaOrdenadaAlfabeticamente = props.ordenarAlfabeticamente(JSON.parse(JSON.stringify(props.datosTodosLosPacientes)));
     return(
         <Container>
             <Row>
+            <Col ><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_pacientes_descartados")}>Pacientes descartados</Button></Col>
                 <Col style={headerStyle}><h1>Lista completa de pacientes</h1></Col>
+                <Col><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_siguientes_pacientes")}>Siguientes pacientes</Button></Col>
             </Row>
             <Table responsive>
                 <thead>

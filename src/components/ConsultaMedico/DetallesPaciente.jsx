@@ -3,7 +3,7 @@ import {useParams, useNavigate} from "react-router-dom";
 import {Col, Container, OverlayTrigger, Row, Table, Tooltip} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import {CabeceraPaciente} from "./CabeceraPaciente";
-import {greenButtonStyle, ladoCruzPequena, ladoLapizPequeno, transparentButtonStyle} from "../../styles";
+import {greenButtonStyle, ladoCruzPequena, ladoLapizPequeno,blueButton, transparentButtonStyle} from "../../styles";
 
 const Fila = (props) => {
     return (<tr>
@@ -56,7 +56,9 @@ export const DetallesPaciente = (props) => {
     };
     return(
         <Container fluid="true">
+            <Row>
             <CabeceraPaciente volver={volver} id={id} datosTodosLosPacientes={props.datosTodosLosPacientes}/>
+            </Row>
             <Row>
                 <Col md={{offset: 1, span: 5}}>
                     <h3>Historia clínica</h3>

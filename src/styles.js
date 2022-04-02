@@ -24,7 +24,8 @@ export const linkButtonStyle = {
     color: "#23216e",
     textDecoration: "none",
     fontWeight: "bold",
-    border: "none"
+    border: "none",
+    margin: 5
 };
 
 export const blueButton = {
@@ -34,8 +35,8 @@ export const blueButton = {
 
 export const blueBigButton = {
     ...blueButton,
-    padding: 100,
-    fontSize:35,
+    padding: 20,
+    fontSize:20,
     border: "none"
 }
 
@@ -54,7 +55,7 @@ export const footerStyle = {
 
 export const whiteNoBorderButton = {
     backgroundColor: "#FFFFFF",
-    color: "#222222",
+    color: "black",
     border: "none"
 };
 
