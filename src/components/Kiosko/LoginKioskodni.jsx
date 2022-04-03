@@ -17,16 +17,16 @@ export const LoginKioskodni = (props) => {
         navigate("/paciente/ticket/"+props.getIDPacienteKiosko(dni));
     }
     return(
-        <Container>
+        <Container style={{paddingTop: 40}}>
             <Row>
                 <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación DNI</h1></Col>
             </Row>
             <Row>
                 <Form onSubmit={(event) => {submitdni(event)}}>
-                    <Row className="justify-content-md-center">
+                    <Row style={{paddingTop: 10}} className="justify-content-md-center">
                         <Col xs={4}>
                             <img alt="Logo MedCon" src="/logo.png"/>
-                            <Form.Group className="mb-3" controlId="formBasicPassword" >
+                            <Form.Group style={{paddingTop: 20}} className="mb-3" controlId="formBasicPassword" >
                                 <Form.Control type="plainText" placeholder="NIF o NIE" onChange={onChangeDni} value={dni}/>
                             </Form.Group>
                         </Col>

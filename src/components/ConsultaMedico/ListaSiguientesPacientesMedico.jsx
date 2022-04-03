@@ -111,12 +111,12 @@ export const ListaSiguientesPacientesMedico = (props) => {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <SortableContext items={props.datosSiguientesPacientes} strategy={verticalListSortingStrategy}>
                 <Container>
-                    <Row>
+                    <Row style={{paddingBottom: 30}}>
                         <Col style={headerStyle}><h1>Siguientes pacientes</h1></Col>
                     </Row>
-                    <Row>
+                    <Row style={{paddingBottom: 10}}>
                         <Col xs={{ order: 'last' }}><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_completa_pacientes")}>Lista completa pacientes</Button></Col>
-                        <Col xs><Button onClick={llamarPrimerPaciente} variant={"light"}  size="lg" style={blueButton}>SIGUIENTE PACIENTE</Button></Col>
+                        <Col xs><Button onClick={llamarPrimerPaciente} variant={"light"} size="lg" style={blueButton}>Siguiente paciente</Button></Col>
                         <Col xs={{ order: 'first' }}><Button style={linkButtonStyle} onClick={() => navigate("/medico/lista_pacientes_descartados")}>Pacientes descartados</Button></Col>
                     </Row>
                     <Table responsive>

@@ -25,12 +25,15 @@ export const linkButtonStyle = {
     textDecoration: "none",
     fontWeight: "bold",
     border: "none",
-    margin: 5
+    margin: 5,
+    fontSize:20
 };
 
 export const blueButton = {
     backgroundColor: "#23216e",
-    color: "#FFFFFF"
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize:20
 };
 
 export const blueBigButton = {
@@ -50,7 +53,8 @@ export const ticketTextDataStyle = {fontSize: 36};
 export const footerStyle = {
     backgroundColor: "#23216e",
     color: "#FFFFFF",
-    textAlign: "center"
+    textAlign: "center",
+    justifyContent: "space-around"
 };
 
 export const whiteNoBorderButton = {

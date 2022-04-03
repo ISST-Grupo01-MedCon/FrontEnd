@@ -16,16 +16,16 @@ export const LoginKioskocipa = (props) => {
         navigate("/paciente/ticket/"+props.getIDPacienteKiosko(CIPA));
     }
     return(
-        <Container>
+        <Container style={{paddingTop: 40}}>
             <Row>
                 <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación CIPA</h1></Col>
             </Row>
             <Row>
                 <Form onSubmit={(event) => {submitCIPA(event)}}>
-                    <Row className="justify-content-md-center">
+                    <Row style={{paddingTop: 10}} className="justify-content-md-center">
                         <Col xs={4}>
                             <img alt="Logo MedCon" src="/logo.png"/>
-                            <Form.Group className="mb-3" controlId="formBasicID">
+                            <Form.Group style={{paddingTop: 20}} className="mb-3" controlId="formBasicID">
                                 <Form.Control type="plainText" placeholder="ID tarjeta" onChange={onChangeCIPA} value={CIPA}/>
                             </Form.Group>
                         </Col>

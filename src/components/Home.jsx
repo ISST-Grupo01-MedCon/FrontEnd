@@ -13,13 +13,12 @@ export const Home = (props) => {
                 <Row>
                 <p style = {{fontSize: 40, fontWeight: "bold"}}>Bienvenido de nuevo: Dr. {props.doc}</p>
                     <Col>
-                        
                         <Image fluid width={1000} height={1000} src="/imagenPrincipal.svg" />
                     </Col>
                     <Col>
                         <Stack style={{border: "none"}} gap={5}>
-                            <Row><Button style={{...blueButton, height: 200, width: 700, fontSize: 30}} onClick={() => navigate("/medico/lista_siguientes_pacientes")}  size="lg">Lista de pacientes</Button></Row>
-                            <Row><Button style={{...blueButton, height: 200, width: 700, fontSize: 30}} onClick={() =>  {props.cambiarModoPaciente("atendido", idSiguientePaciente); navigate("/medico/detalles_paciente/"+idSiguientePaciente);}} size="lg">Llamar al siguiente paciente</Button></Row>
+                            <Row style={{justifyContent: "center", paddingTop: 150}}><Button style={{...blueButton, height: 150, width: 400, fontSize: 30}} onClick={() => navigate("/medico/lista_siguientes_pacientes")}  size="lg">Lista de pacientes</Button></Row>
+                            <Row style={{justifyContent: "center"}}><Button style={{...blueButton, height: 150, width: 400, fontSize: 30}} onClick={() =>  {props.cambiarModoPaciente("atendido", idSiguientePaciente); navigate("/medico/detalles_paciente/"+idSiguientePaciente);}} size="lg">Llamar al siguiente paciente</Button></Row>
                         </Stack>
                     </Col>
                 </Row>

@@ -25,7 +25,7 @@ export const PacienteRegistradoKiosko = (props) => {
     });
 
     return(
-        <Container>
+        <Container style={{paddingTop: 40}}>
             <Col>
                 <h1>Su identificador es:</h1>
                 <p style={ticketTextDataStyle}>{ticketID}</p>

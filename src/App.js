@@ -295,17 +295,17 @@ function App() {
                 <Route path="/medico/lista_siguientes_pacientes" element={datosDescargados? <><Header/><ListaSiguientesPacientesMedico datosTodosLosPacientes={datosTodosLosPacientes} datosSiguientesPacientes={datosSiguientesPacientes} setDatosSiguientesPacientes={setDatosSiguientesPacientes} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <></>} />
                 <Route path="/medico/lista_completa_pacientes" element={datosDescargados? <><Header/><ListaCompletaPacientesMedico datosTodosLosPacientes={datosTodosLosPacientes} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <></>} />
                 <Route path="/medico/lista_pacientes_descartados" element={datosDescargados? <><Header/><ListaPacientesNoAtendidosMedico datosTodosLosPacientes={datosTodosLosPacientes} datosPacientesNoAtendidos={datosPacientesNoAtendidos} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <></>} />
-                <Route path="/medico/login" element={datosDescargados? <><Header/><LoginMedico /><Footer/></> : <></>} />
+                <Route path="/medico/login" element={datosDescargados? <><HeaderHomePreLogin/><LoginMedico /><Footer/></> : <></>} />
 
                 <Route path="/medico/detalles_paciente/:id" element={datosDescargados? <><Header/><DetallesPaciente useQuery={useQuery} datosHistoriaClinica={datosHistoriaClinica} datosTodosLosPacientes={datosTodosLosPacientes} cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente}/><Footer/></> : <></>} />
                 <Route path="/medico/nueva_consulta_paciente/:id" element={datosDescargados? <><Header/><NuevaConsulta useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <></>} />
                 <Route path="/medico/recetas_paciente/:id" element={datosDescargados? <><Header/><RecetasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <></>} />
                 <Route path="/medico/pruebas_paciente/:id" element={datosDescargados? <><Header/><PruebasMedicasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <></>} />
 
-                <Route path="/paciente/login" element={datosDescargados? <LoginKiosko /> : <></>} />
-                <Route path="/paciente/login/dni" element={datosDescargados? <LoginKioskodni cambiarModoPaciente={cambiarModoPaciente} getIDPacienteKiosko={getIDPacienteKiosko}/> : <></>} />
-                <Route path="/paciente/login/cipa" element={datosDescargados? <LoginKioskocipa cambiarModoPaciente={cambiarModoPaciente} getIDPacienteKiosko={getIDPacienteKiosko}/> : <></>}  />
-                <Route path="/paciente/ticket/:id" element={datosDescargados? <PacienteRegistradoKiosko/> : <></>}  />
+                <Route path="/paciente/login" element={datosDescargados? <><LoginKiosko /><Footer/></> : <></>} />
+                <Route path="/paciente/login/dni" element={datosDescargados? <><LoginKioskodni cambiarModoPaciente={cambiarModoPaciente} getIDPacienteKiosko={getIDPacienteKiosko}/><Footer/></> : <></>} />
+                <Route path="/paciente/login/cipa" element={datosDescargados? <><LoginKioskocipa cambiarModoPaciente={cambiarModoPaciente} getIDPacienteKiosko={getIDPacienteKiosko}/><Footer/></> : <></>}  />
+                <Route path="/paciente/ticket/:id" element={datosDescargados? <><PacienteRegistradoKiosko/><Footer /></> : <></>}  />
 
                 <Route path="/sala_de_espera" element={datosDescargados? <ListaSalaDeEspera /> : <></>} />
 

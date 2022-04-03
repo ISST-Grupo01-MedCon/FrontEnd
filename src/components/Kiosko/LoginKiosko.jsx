@@ -6,17 +6,17 @@ export const LoginKiosko = (props) => {
     const navigate = useNavigate();
 
     return(
-        <Container>
+        <Container style={{paddingTop: 40}}>
             <Form>
             <Row className="justify-content-md-center">
                 <Col xs={4}>
                     <img alt="Logo MedCon" src="/logo.png"/>
                 </Col>
             </Row>
-            <Row>
-                <Col style={{textAlign: "center", fontWeight: "bold", marginBottom:100}}><h1><p>PARA REGISTRAR SU PRESENCIA</p><p>POR FAVOR ELIJA SI INSERTAR</p> SU DNI O SU CIPA</h1></Col>
+            <Row style={{paddingTop: 40}}>
+                <Col style={{textAlign: "center", fontWeight: "bold", marginBottom:40}}><h1><p>Para registrar su presencia,</p><p>por favor inserte</p> su DNI o su CIPA.</h1></Col>
             </Row>
-            <Row>
+            <Row style={{paddingBottom: 10}}>
                 <Col><Button onClick={() => navigate("/paciente/login/dni")} style = {blueBigButton}>AUNTENTICAR CON DNI</Button></Col>
                 <Col><Button onClick={() => navigate("/paciente/login/cipa")} style = {blueBigButton}>AUNTENTICAR CON CIPA</Button></Col>
             </Row>

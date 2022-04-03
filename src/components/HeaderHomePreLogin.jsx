@@ -20,7 +20,7 @@ export function HeaderHomePreLogin(props) {
                     <Navbar.Text>
                              <Container fluid>
                                  <Row>
-                                     <Col md="auto"><Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteNoBorderButton}>Contacto</Button></Col>
+                                     
                                      <Col md="auto"><Button onClick={() => navigate("/medico/login")} variant="light" size="lg" style={greenButtonStyle}>Login</Button></Col>
                                  </Row>
                              </Container>
