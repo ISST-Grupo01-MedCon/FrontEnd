@@ -7,7 +7,6 @@ import Col from 'react-bootstrap/Col';
 import {Navbar} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
 import {greenButtonStyle, whiteNoBorderButton} from "../styles";
-import styles from "../App.css";
 
 function Header(props) {
     const navigate = useNavigate();

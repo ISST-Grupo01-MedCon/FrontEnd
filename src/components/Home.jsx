@@ -1,10 +1,9 @@
 
 import {Button, Col, Container, Image, Row, Stack} from "react-bootstrap";
-import {blueButton, headerStyle} from "../styles";
+import {blueButton} from "../styles";
 import {useNavigate} from "react-router-dom";
 
 export const Home = (props) => {
-    const nombreDoctor = "Ramón";
     const idSiguientePaciente = props.getIDSiguientePaciente(parseInt(-1));
     const navigate = useNavigate();
     return(

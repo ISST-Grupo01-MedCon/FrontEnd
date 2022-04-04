@@ -6,8 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import {Navbar} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
-import {greenButtonStyle, whiteNoBorderButton} from "../styles";
-import styles from "../App.css";
+import {greenButtonStyle} from "../styles";
 
 export function HeaderHomePreLogin(props) {
     const navigate = useNavigate();

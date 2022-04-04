@@ -26,7 +26,7 @@ const Filas = (props) => {
 
     return(
         props.datosTodosLosPacientes.map((paciente, pos) => {
-            return(<Fila key={pos} idPaciente={pos} nombre={paciente.nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>
+            return(<Fila key={pos} idPaciente={getIDPaciente(paciente.nombre)} nombre={paciente.nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>
             );
         })
     );

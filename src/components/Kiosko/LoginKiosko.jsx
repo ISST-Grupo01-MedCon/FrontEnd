@@ -17,8 +17,8 @@ export const LoginKiosko = (props) => {
                 <Col style={{textAlign: "center", fontWeight: "bold", marginBottom:40}}><h1><p>Para registrar su presencia,</p><p>por favor inserte</p> su DNI o su CIPA.</h1></Col>
             </Row>
             <Row style={{paddingBottom: 10}}>
-                <Col><Button onClick={() => navigate("/paciente/login/dni")} style = {blueBigButton}>AUNTENTICAR CON DNI</Button></Col>
-                <Col><Button onClick={() => navigate("/paciente/login/cipa")} style = {blueBigButton}>AUNTENTICAR CON CIPA</Button></Col>
+                <Col><Button onClick={() => navigate("/paciente/login/dni")} style = {blueBigButton}>AUTENTICAR CON DNI</Button></Col>
+                <Col><Button onClick={() => navigate("/paciente/login/cipa")} style = {blueBigButton}>AUTENTICAR CON CIPA</Button></Col>
             </Row>
             </Form>
         </Container>

@@ -3,7 +3,7 @@ import {useParams, useNavigate} from "react-router-dom";
 import {Col, Container, OverlayTrigger, Row, Table, Tooltip} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import {CabeceraPaciente} from "./CabeceraPaciente";
-import {greenButtonStyle, ladoCruzPequena, ladoLapizPequeno,blueButton, transparentButtonStyle} from "../../styles";
+import {greenButtonStyle, ladoCruzPequena, ladoLapizPequeno, transparentButtonStyle} from "../../styles";
 
 const Fila = (props) => {
     return (<tr>

@@ -2,10 +2,7 @@ import React from "react";
 import {Col, Container, OverlayTrigger, Row, Table, Tooltip, Button} from "react-bootstrap";
 import {headerStyle, ladoIconosNormales, transparentButtonStyle} from "../../styles";
 import {useNavigate} from "react-router-dom";
-import {
-    blueBigButton,
-    linkButtonStyle,
-} from "../../styles";
+import {linkButtonStyle} from "../../styles";
 
 const Fila = (props) => {
     const navigate = useNavigate();
