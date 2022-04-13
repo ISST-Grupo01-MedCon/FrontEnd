@@ -1,8 +1,5 @@
-import {data} from '../../data/pacientesSalaDeEspera';
 import React from "react";
 import {Container, Table} from "react-bootstrap";
-
-let datos = JSON.parse(JSON.stringify(data));
 
 const Fila = (props) => {
     return (<tr>
@@ -10,12 +7,10 @@ const Fila = (props) => {
     </tr>);
 };
 
-const Filas = () => {
-    return(
-        datos.map((arrPaciente, idx) => {
-            return(<Fila key={idx} iden={arrPaciente[0]} consulta={arrPaciente[1]}/>);
-        })
-    );
+const Filas = (props) => {
+    return(props.datosPacientesLlamados.map((paciente, pos) => {
+        return(<Fila key={pos} iden={paciente.ticketID} consulta={paciente.id}/>);
+    }));
 }
 
 export const ListaSalaDeEspera = (props) => {
@@ -29,7 +24,7 @@ export const ListaSalaDeEspera = (props) => {
                 </tr>
                 </thead>
                 <tbody>
-                <Filas/>
+                <Filas datosPacientesLlamados={props.datosPacientesLlamados}/>
                 </tbody>
             </Table>
         </Container>);

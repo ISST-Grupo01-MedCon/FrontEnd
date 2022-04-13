@@ -35,6 +35,7 @@ function useQuery() {
 function App() {
   const [datosTodosLosPacientes, setDatosTodosLosPacientes] = useState([]);
   const [datosSiguientesPacientes, setDatosSiguientesPacientes] = useState([]);
+  const [datosPacientesLlamados, setDatosPacientesLlamados] = useState([]);
   const [datosPacientesNoAtendidos, setPacientesNoAtendidos] = useState([]);
   const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica)));
   const [datosDescargados, setDatosDescargados] = useState(false);
@@ -74,6 +75,7 @@ function App() {
 
     const cambiarModoPaciente = async (modo, id_o_DNI_o_CIPA_paciente, desde = undefined) => {
         let nuevoArraySP = JSON.parse(JSON.stringify(datosSiguientesPacientes));
+        let nuevoArrayPL = JSON.parse(JSON.stringify(datosPacientesLlamados));
         let nuevoArrayPD = JSON.parse(JSON.stringify(datosPacientesNoAtendidos));
         let idx = -1;
         let idPaciente = -1;
@@ -94,6 +96,14 @@ function App() {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     }
+                });
+                //Marcamos el paciente como llamado:
+                await fetch('/consultas/llamada/'+idPaciente, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
                 });
                 //Quitamos el ticketID del paciente:
                 let consulta = await (await fetch('/consultas/'+idPaciente)).json();
@@ -201,6 +211,32 @@ function App() {
                     });
                 }
                 break;
+            case "llamado":
+                idPaciente = id_o_DNI_o_CIPA_paciente;
+                let ticketID2;
+                nuevoArraySP.map((paciente, pos) => {
+                    if (parseInt(paciente.id) === parseInt(idPaciente)) {
+                        idx = pos;
+                        ticketID2 = paciente.ticketID;
+                    }
+                    return pos;
+                });
+                if (idx !== -1) {
+                    nuevoArraySP.splice(idx, 1);
+                    nuevoArrayPL.push({ticketID: ticketID2 || generarIdentificadorUnico(), id: idPaciente});
+                    setDatosSiguientesPacientes(nuevoArraySP);
+                    setDatosPacientesLlamados(nuevoArrayPL);
+                    console.log(nuevoArrayPL);
+                    //Descartamos el paciente en el backend
+                    await fetch('/consultas/llamada/'+idPaciente, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                }
+                break; 
             default:
                 break;
         }
@@ -270,6 +306,7 @@ function App() {
             .then(data => {
                 let arraySP = [];
                 let arrayPD = [];
+                let arrayPL = [];
 
                 // Clasificamos los pacientes en función de sus atributos
                 for (let i in data) {
@@ -277,11 +314,14 @@ function App() {
                         arrayPD.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
                     } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "")) {
                         arraySP.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
+                    } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "") && data[i].llamado) {
+                        arrayPL.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
                     }
                 }
                 setDoc(data[0].medico);
                 setDatosSiguientesPacientes(arraySP);
                 setPacientesNoAtendidos(arrayPD);
+                setDatosPacientesLlamados(arrayPL);
             });
         setTimeout(() => {
             setDatosDescargados(true);
@@ -307,7 +347,7 @@ function App() {
                 <Route path="/paciente/login/cipa" element={datosDescargados? <><LoginKioskocipa cambiarModoPaciente={cambiarModoPaciente} getIDPacienteKiosko={getIDPacienteKiosko}/><Footer/></> : <></>}  />
                 <Route path="/paciente/ticket/:id" element={datosDescargados? <><PacienteRegistradoKiosko/><Footer /></> : <></>}  />
 
-                <Route path="/sala_de_espera" element={datosDescargados? <ListaSalaDeEspera /> : <></>} />
+                <Route path="/sala_de_espera" element={datosDescargados? <ListaSalaDeEspera datosPacientesLlamados={datosPacientesLlamados}/> : <></>} />
 
                 <Route path="/contacto" element={datosDescargados? <><Header/><Contacto /><Footer/></> : <></>} />
                 <Route path="/Home" element={<><HeaderHome/><Home cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente} doc={doc}/><Footer/></>} ></Route>
