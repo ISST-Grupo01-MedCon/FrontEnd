@@ -9,7 +9,7 @@ const Fila = (props) => {
 
 const Filas = (props) => {
     return(props.datosPacientesLlamados.map((paciente, pos) => {
-        return(<Fila key={pos} iden={paciente.ticketId} consulta={paciente.id}/>);
+        return(<Fila key={pos} iden={paciente.ticketID} consulta={"PEDIATRÍA"}/>);
     }));
 }
 
@@ -20,7 +20,7 @@ export const ListaSalaDeEspera = (props) => {
                 <thead>
                 <tr>
                     <th>Identificador</th>
-                    <th>Sala de espera</th>
+                    <th>Sala de consulta</th>
                 </tr>
                 </thead>
                 <tbody>
