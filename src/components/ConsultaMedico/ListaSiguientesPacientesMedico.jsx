@@ -104,7 +104,6 @@ export const ListaSiguientesPacientesMedico = (props) => {
             let idPaciente = props.datosSiguientesPacientes[0].id;
             navigate("/medico/detalles_paciente/"+idPaciente);
             props.cambiarModoPaciente("atendido", idPaciente);
-            props.cambiarModoPaciente("llamado", idPaciente);
         }
     }
 

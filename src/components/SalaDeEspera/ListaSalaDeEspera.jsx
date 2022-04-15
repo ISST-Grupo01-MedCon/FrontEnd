@@ -9,7 +9,7 @@ const Fila = (props) => {
 
 const Filas = (props) => {
     return(props.datosPacientesLlamados.map((paciente, pos) => {
-        return(<Fila key={pos} iden={paciente.ticketID} consulta={paciente.id}/>);
+        return(<Fila key={pos} iden={paciente.ticketId} consulta={paciente.id}/>);
     }));
 }
 

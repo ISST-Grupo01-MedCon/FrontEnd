@@ -98,7 +98,7 @@ function App() {
                     }
                 });
                 //Marcamos el paciente como llamado:
-                await fetch('/consultas/llamada/'+idPaciente, {
+                await fetch('/consultas/llamada/'+ idPaciente, {
                     method: 'PUT',
                     headers: {
                         'Accept': 'application/json',
@@ -228,7 +228,7 @@ function App() {
                     setDatosPacientesLlamados(nuevoArrayPL);
                     console.log(nuevoArrayPL);
                     //Descartamos el paciente en el backend
-                    await fetch('/consultas/llamada/'+idPaciente, {
+                    await fetch('/consultas/llamada/'+ idPaciente, {
                         method: 'PUT',
                         headers: {
                             'Accept': 'application/json',
@@ -314,7 +314,7 @@ function App() {
                         arrayPD.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
                     } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "")) {
                         arraySP.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
-                    } else if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "") && data[i].llamado) {
+                    } if (data[i].llamado) {
                         arrayPL.push({ticketID: data[i].ticketId , id: parseInt(data[i].id)});
                     }
                 }
