@@ -33,8 +33,12 @@ export const DetallesPaciente = (props) => {
             navigate("/medico/lista_pacientes_descartados");
         else if (from === "tp")
             navigate("/medico/lista_completa_pacientes");
-        else
+        else {
             navigate("/medico/lista_siguientes_pacientes");
+            // Al volver de ver los detalles de un paciente ya se le habrá pasado consulta, por lo que se le quita de
+            // la pantalla de siguientes pacientes si estaba en ella anteriormente.
+            props.setLlamado(id, false, "PEDIATRÍA");
+        }
     };
     const irANuevaConsultaPaciente = () => {
         if ((from === "tp") || (from === "pd"))
@@ -82,7 +86,7 @@ export const DetallesPaciente = (props) => {
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irANuevaConsultaPaciente}>Nueva consulta</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irARecetasPaciente}>Ver recetas</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irAPruebasPaciente}>Pruebas médicas</Button></Row>
-                    {((from !== "tp") && (from !== "pd")) ? <Row>{(idSiguientePaciente === -1) ? <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.cambiarModoPaciente("atendido", id); props.cambiarModoPaciente("llamado", props.getIDSiguientePaciente(parseInt(id))); navigate("/medico/detalles_paciente/"+idSiguientePaciente);}}>Siguiente paciente</Button>}</Row> : <></>}
+                    {((from !== "tp") && (from !== "pd")) ? <Row>{(idSiguientePaciente === -1) ? <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.setLlamado(idSiguientePaciente, true, "PEDIATRÍA"); props.cambiarModoPaciente("atendido", id); navigate("/medico/detalles_paciente/"+idSiguientePaciente);}}>Siguiente paciente</Button>}</Row> : <></>}
                 </Col>
             </Row>
         </Container>

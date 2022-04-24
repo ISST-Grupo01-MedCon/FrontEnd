@@ -13,7 +13,7 @@ export const LoginKioskodni = (props) => {
     }
     const submitdni = (event) => {
         event.preventDefault();
-        props.cambiarModoPaciente("registrado", dni, "kioskoDNI");
+        props.cambiarModoPaciente("registrado", dni, "kiosko");
         navigate("/paciente/ticket/"+props.getIDPacienteKiosko(dni));
     }
     return(

@@ -12,7 +12,7 @@ export const LoginKioskocipa = (props) => {
     }
     const submitCIPA = (event) => {
         event.preventDefault();
-        props.cambiarModoPaciente("registrado", CIPA, "kioskoCIPA");
+        props.cambiarModoPaciente("registrado", CIPA, "kiosko");
         navigate("/paciente/ticket/"+props.getIDPacienteKiosko(CIPA));
     }
     return(

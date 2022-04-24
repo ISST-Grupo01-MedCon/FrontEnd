@@ -56,7 +56,7 @@ const Fila = (props) => {
         <td>{props.identificador}</td>
         <td>{props.nombre}</td>
         <td>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("atendido", props.idPaciente)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("atendido", props.idPaciente, "sp")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
             <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("descartado", props.idPaciente)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Descartar</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Cruz"} src="/cruz.png"/></OverlayTrigger></button>
             <button style={transparentButtonStyle} onClick={() => navigate("/medico/detalles_paciente/"+props.idPaciente)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
         </td>
@@ -94,7 +94,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
         if (active.id !== over.id) {
             const oldIndex = getIndexFromIdentificador(props.datosSiguientesPacientes, active.id);
             const newIndex = getIndexFromIdentificador(props.datosSiguientesPacientes, over.id);
-            props.setDatosSiguientesPacientes(arrayMove(props.datosSiguientesPacientes, oldIndex, newIndex));
+            props.cambiarOrdenPacientes(arrayMove(props.datosSiguientesPacientes, oldIndex, newIndex));
         }
         setActiveId(null);
     };
@@ -103,6 +103,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
         if (props.datosSiguientesPacientes.length > 0) {
             let idPaciente = props.datosSiguientesPacientes[0].id;
             navigate("/medico/detalles_paciente/"+idPaciente);
+            props.setLlamado(idPaciente, true, "PEDIATRÍA");
             props.cambiarModoPaciente("atendido", idPaciente);
         }
     }
