@@ -2,7 +2,7 @@ import './App.css';
 import Header from './components/Header'
 import React, {useState, useEffect} from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {HashRouter as Router, Routes, Route, useLocation} from "react-router-dom";
+import {BrowserRouter as Router, Routes, Route, useLocation} from "react-router-dom";
 import {ListaSiguientesPacientesMedico} from "./components/ConsultaMedico/ListaSiguientesPacientesMedico";
 import {ListaCompletaPacientesMedico} from "./components/ConsultaMedico/ListaCompletaPacientesMedico";
 import {ListaPacientesNoAtendidosMedico} from "./components/ConsultaMedico/ListaPacientesNoAtendidosMedico";
@@ -265,7 +265,7 @@ function App() {
                 if ((parseInt(paciente.id) === parseInt(idPaciente)) && (paciente.consulta === sala_de_consulta))
                     return;
             }
-            // Borramos los paciente llamados anteriormente de la misma sala de consulta si lo hay de la lista de
+            // Borramos, si lo hay, el paciente llamado anteriormente de la misma sala de consulta de la lista de
             // pacientes llamados:
             for (let pos in datosPacientesLlamados) {
                 let paciente = datosPacientesLlamados[pos];
@@ -472,6 +472,7 @@ function App() {
                 <Route path="/medico/lista_completa_pacientes" element={datosDescargados? <><Header/><ListaCompletaPacientesMedico datosTodosLosPacientes={datosTodosLosPacientes} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <></>} />
                 <Route path="/medico/lista_pacientes_descartados" element={datosDescargados? <><Header/><ListaPacientesNoAtendidosMedico datosTodosLosPacientes={datosTodosLosPacientes} datosPacientesNoAtendidos={datosPacientesNoAtendidos} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <></>} />
                 <Route path="/medico/login" element={datosDescargados? <><HeaderHomePreLogin/><LoginMedico /><Footer/></> : <></>} />
+                <Route path="/logout" element={datosDescargados? <><HeaderHomePreLogin/><LoginMedico /><Footer/></> : <></>} />
 
                 <Route path="/medico/detalles_paciente/:id" element={datosDescargados? <><Header/><DetallesPaciente useQuery={useQuery} datosHistoriaClinica={datosHistoriaClinica} datosTodosLosPacientes={datosTodosLosPacientes} cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente} setLlamado={setLlamado}/><Footer/></> : <></>} />
                 <Route path="/medico/nueva_consulta_paciente/:id" element={datosDescargados? <><Header/><NuevaConsulta useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <></>} />
@@ -486,7 +487,7 @@ function App() {
                 <Route path="/sala_de_espera" element={datosDescargados? <ListaSalaDeEspera datosPacientesLlamados={datosPacientesLlamados}/> : <></>} />
 
                 <Route path="/contacto" element={datosDescargados? <><Header/><Contacto /><Footer/></> : <></>} />
-                <Route path="/Home" element={<><HeaderHome/><Home cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente} doc={doc.nombre}/><Footer/></>} ></Route>
+                <Route path="/home" element={<><HeaderHome/><Home cambiarModoPaciente={cambiarModoPaciente} getIDSiguientePaciente={getIDSiguientePaciente} doc={doc.nombre}/><Footer/></>} ></Route>
                 <Route path="/" element={<><HeaderHomePreLogin/><HomePreLogin /><Footer/></>} />
             </Routes>
           </div> : <div></div>}

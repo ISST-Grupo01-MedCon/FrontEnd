@@ -28,7 +28,7 @@ export const LoginMedico = (props) => {
                             <Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteButtonStyle}>Incidencia</Button>
                         </Col>
                         <Col>
-                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit" onClick={() => navigate("/Home")}>
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit" onClick={() => navigate("/home")}>
                                 Login
                             </Button>
                         </Col>

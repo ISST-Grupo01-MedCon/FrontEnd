@@ -61,7 +61,7 @@ export const DetallesPaciente = (props) => {
     return(
         <Container fluid="true">
             <Row>
-            <CabeceraPaciente volver={volver} id={id} cambiarModoPaciente={props.cambiarModoPaciente} datosTodosLosPacientes={props.datosTodosLosPacientes}/>
+            <CabeceraPaciente volver={volver} id={id} datosTodosLosPacientes={props.datosTodosLosPacientes}/>
             </Row>
             <Row>
                 <Col md={{offset: 1, span: 5}}>
