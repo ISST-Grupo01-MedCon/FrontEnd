@@ -1,25 +1,45 @@
-import {Button, Col, Container, Form, Row} from "react-bootstrap";
-import React from "react";
+import {Alert, Button, Col, Container, Form, Row} from "react-bootstrap";
+import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {greenButtonStyle, headerStyle, whiteButtonStyle} from "../../styles";
 
 export const LoginMedico = (props) => {
+    const [IDMedico, setIDMedico] = useState("");
+    const [password, setPassword] = useState("");
+    const [show, setShow] = useState(false);
     const navigate = useNavigate();
+
+    const submitLogin = async (event) => {
+        event.preventDefault();
+        let respuesta = await fetch("http://localhost:8080/medico/autenticar", {
+            "headers": {
+                "content-type": "application/x-www-form-urlencoded"
+            },
+            "method": "POST",
+            "body": "username="+IDMedico+"&password="+password
+        });
+        let urlFinal = respuesta.url.replace("http://localhost:8080","");
+        if (urlFinal === "/medico/login?error")
+            setShow(true);
+        else
+            navigate(urlFinal);
+    }
+
     return(
         <Container>
             <Row>
                 <Col style={headerStyle}><h1>Identificación</h1></Col>
             </Row>
             <Row>
-                <Form>
+                <Form onSubmit={(event) => {submitLogin(event)}}>
                     <Row className="justify-content-md-center">
                         <Col xs={4}>
                             <Form.Group className="mb-3" controlId="formBasicID">
-                                <Form.Control type="plainText" placeholder="ID médico"/>
+                                <Form.Control type="plainText" placeholder="ID médico" onChange={(event) => setIDMedico(event.target.value)} value={IDMedico}/>
                             </Form.Group>
 
                             <Form.Group className="mb-3" controlId="formBasicPassword">
-                                <Form.Control type="password" placeholder="Contraseña" />
+                                <Form.Control type="password" placeholder="Contraseña" onChange={(event) => setPassword(event.target.value)} value={password}/>
                             </Form.Group>
                         </Col>
                     </Row>
@@ -28,11 +48,23 @@ export const LoginMedico = (props) => {
                             <Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteButtonStyle}>Incidencia</Button>
                         </Col>
                         <Col>
-                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit" onClick={() => navigate("/home")}>
+                            <Button variant="light" size="lg" style={greenButtonStyle} type="submit">
                                 Login
                             </Button>
                         </Col>
                     </Row>
+                    {show?
+                        <Row className="justify-content-md-center" style={{paddingTop: "40px"}}>
+                            <Col xs={4}>
+                                <Alert variant="light" onClose={() => setShow(false)} dismissible>
+                                    <Alert.Heading>¡Error!</Alert.Heading>
+                                    <p>
+                                        La combinación de ID y contraseña introducida no es válida.
+                                        Por favor, compruebe los datos e inténtelo de nuevo.
+                                    </p>
+                                </Alert>
+                            </Col>
+                        </Row> : <></>}
                 </Form>
             </Row>
         </Container>

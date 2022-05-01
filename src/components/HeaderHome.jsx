@@ -10,6 +10,12 @@ import {greenButtonStyle, whiteNoBorderButton} from "../styles";
 
 export function HeaderHome(props) {
     const navigate = useNavigate();
+
+    const logout = async () => {
+        await fetch("/medico/logout");
+        navigate("/medico/login");
+    };
+
     return (
         <Navbar>
             <Container>
@@ -20,7 +26,7 @@ export function HeaderHome(props) {
                              <Container fluid>
                                  <Row>
                                      <Col md="auto"><Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteNoBorderButton}>Contacto</Button></Col>
-                                     <Col md="auto"><Button onClick={() => navigate("/medico/login")} variant="light" size="lg" style={greenButtonStyle}>Logout</Button></Col>
+                                     <Col md="auto"><Button onClick={logout} variant="light" size="lg" style={greenButtonStyle}>Logout</Button></Col>
                                  </Row>
                              </Container>
                     </Navbar.Text>
