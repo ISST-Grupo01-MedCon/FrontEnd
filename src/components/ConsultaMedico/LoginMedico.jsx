@@ -2,27 +2,40 @@ import {Alert, Button, Col, Container, Form, Row} from "react-bootstrap";
 import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {greenButtonStyle, headerStyle, whiteButtonStyle} from "../../styles";
+import {useCookies} from "react-cookie";
 
 export const LoginMedico = (props) => {
     const [IDMedico, setIDMedico] = useState("");
     const [password, setPassword] = useState("");
     const [show, setShow] = useState(false);
+    const [, setCookie, ] = useCookies(['medico']);
+
     const navigate = useNavigate();
 
     const submitLogin = async (event) => {
         event.preventDefault();
-        let respuesta = await fetch("http://localhost:8080/medico/autenticar", {
+        let respuesta = await fetch("/medico/autenticar", {
             "headers": {
                 "content-type": "application/x-www-form-urlencoded"
             },
             "method": "POST",
             "body": "username="+IDMedico+"&password="+password
-        });
-        let urlFinal = respuesta.url.replace("http://localhost:8080","");
-        if (urlFinal === "/medico/login?error")
+        })
+        if (parseInt(respuesta.status) === 401)
             setShow(true);
-        else
-            navigate(urlFinal);
+        else {
+            let doctores = await props.peticionHTML('/medicos');
+            for (let doctor of doctores) {
+                if (doctor.usuario === IDMedico) {
+                    // Guardamos el nombre del doctor en una cookie
+                    setCookie('usuarioMedico', doctor.usuario, { path: '/' });
+                    props.setDoc(doctor);
+                    props.setLoggedIn(true);
+                    navigate("/");
+                    break;
+                }
+            }
+        }
     }
 
     return(

@@ -30,7 +30,7 @@ import {
  */
 const getIndexFromIdentificador = (array, identificador) => {
     for (let i in array) {
-        if (array[i].ticketID === identificador) {
+        if (array[i].ticketId === identificador) {
             return i;
         }
     }
@@ -45,7 +45,7 @@ const Fila = (props) => {
         setNodeRef,
         transform,
         transition,
-    } = useSortable({id: props.identificador});
+    } = useSortable({id: props.id});
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -56,21 +56,22 @@ const Fila = (props) => {
         <td>{props.identificador}</td>
         <td>{props.nombre}</td>
         <td>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("atendido", props.idPaciente, "sp")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("descartado", props.idPaciente)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Descartar</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Cruz"} src="/cruz.png"/></OverlayTrigger></button>
-            <button style={transparentButtonStyle} onClick={() => navigate("/medico/detalles_paciente/"+props.idPaciente)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("atendido", props.idConsulta, "sp")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("descartado", props.idConsulta)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Descartar</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Cruz"} src="/cruz.png"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => navigate("/medico/detalles_paciente/"+props.idConsulta)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
         </td>
     </tr>);
 };
 
 const Filas = (props) => {
-    return(props.datosSiguientesPacientes.map((paciente, pos) => {
-        return(<Fila key={pos} idPaciente={paciente.id} identificador={paciente.ticketID}
-                     nombre={props.datosTodosLosPacientes[paciente.id].nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>);
+    return(props.datosSiguientesPacientes.map((consulta, pos) => {
+        return(<Fila key={pos} id={consulta.ticketId} idConsulta={consulta.id} identificador={consulta.ticketId}
+                     nombre={consulta.paciente} cambiarModoPaciente={props.cambiarModoPaciente}/>);
     }));
 }
 
 export const ListaSiguientesPacientesMedico = (props) => {
+    const datosSiguientesPacientes = props.getConsultas(props.datosConsultas, "SP");
     const navigate = useNavigate();
 
     /* Variables y funciones para dnd-kit */
@@ -92,25 +93,25 @@ export const ListaSiguientesPacientesMedico = (props) => {
     const handleDragEnd = (event) => {
         const { active, over } = event;
         if (active.id !== over.id) {
-            const oldIndex = getIndexFromIdentificador(props.datosSiguientesPacientes, active.id);
-            const newIndex = getIndexFromIdentificador(props.datosSiguientesPacientes, over.id);
-            props.cambiarOrdenPacientes(arrayMove(props.datosSiguientesPacientes, oldIndex, newIndex));
+            const oldIndex = getIndexFromIdentificador(datosSiguientesPacientes, active.id);
+            const newIndex = getIndexFromIdentificador(datosSiguientesPacientes, over.id);
+            props.cambiarOrdenPacientes(arrayMove(datosSiguientesPacientes, oldIndex, newIndex));
         }
         setActiveId(null);
     };
 
     const llamarPrimerPaciente = () => {
-        if (props.datosSiguientesPacientes.length > 0) {
-            let idPaciente = props.datosSiguientesPacientes[0].id;
-            navigate("/medico/detalles_paciente/"+idPaciente);
-            props.setLlamado(idPaciente, true, "PEDIATRÍA");
-            props.cambiarModoPaciente("atendido", idPaciente);
+        if (datosSiguientesPacientes.length > 0) {
+            let idConsulta = datosSiguientesPacientes[0].id;
+            navigate("/medico/detalles_paciente/"+idConsulta);
+            props.setLlamado(idConsulta, true);
+            props.cambiarModoPaciente("atendido", idConsulta);
         }
     }
 
     return(
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <SortableContext items={props.datosSiguientesPacientes} strategy={verticalListSortingStrategy}>
+            <SortableContext items={datosSiguientesPacientes} strategy={verticalListSortingStrategy}>
                 <Container>
                     <Row style={{paddingBottom: 30}}>
                         <Col style={headerStyle}><h1>Siguientes pacientes</h1></Col>
@@ -130,10 +131,10 @@ export const ListaSiguientesPacientesMedico = (props) => {
                         </tr>
                         </thead>
                         <tbody>
-                            <Filas datosSiguientesPacientes={props.datosSiguientesPacientes} datosTodosLosPacientes={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
+                            <Filas datosSiguientesPacientes={datosSiguientesPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
                         </tbody>
                     </Table>
-                    <DragOverlay wrapperElement="div">{activeId ? <Table responsive style={movingRowStyle}><tbody><Fila tooltips="no" idPaciente={0} identificador={activeId} nombre={props.datosTodosLosPacientes[props.datosSiguientesPacientes[getIndexFromIdentificador(props.datosSiguientesPacientes, activeId)].id].nombre}/></tbody></Table> : null}</DragOverlay>
+                    <DragOverlay wrapperElement="div">{activeId ? <Table responsive style={movingRowStyle}><tbody><Fila tooltips="no" idPaciente={0} identificador={activeId} nombre={datosSiguientesPacientes[getIndexFromIdentificador(datosSiguientesPacientes, activeId)].paciente}/></tbody></Table> : null}</DragOverlay>
                 </Container>
             </SortableContext>
         </DndContext>);

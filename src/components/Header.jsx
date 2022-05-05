@@ -7,13 +7,31 @@ import Col from 'react-bootstrap/Col';
 import {Navbar} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
 import {greenButtonStyle, whiteNoBorderButton} from "../styles";
+import {useCookies} from "react-cookie";
 
 function Header(props) {
     const navigate = useNavigate();
+    const [, , removeCookie] = useCookies(['medico']);
+
+    const login_logout_action = async () => {
+        if (props.loggedIn) {
+            // Eliminamos la cookie del doctor
+            removeCookie('usuarioMedico');
+            // Esperamos a que la cookie se haya borrado del todo antes de irnos a la página de login
+            await setTimeout(async () => {
+                await logout();
+                navigate("/medico/login");
+            }, 1000);
+        } else {
+            navigate("/medico/login");
+        }
+    };
 
     const logout = async () => {
-        await fetch("/medico/logout");
-        navigate("/medico/login");
+        try {
+            await fetch("/medico/logout");
+        } catch(e) {}
+        props.setLoggedIn(false);
     };
 
     return (
@@ -25,10 +43,10 @@ function Header(props) {
                     <Navbar.Text>
                         <Container fluid>
                             <Row>
-                                <Col md="auto"><Button onClick={() => navigate("/")} variant="light" size="lg" style={whiteNoBorderButton}>Home</Button></Col>
-                                <Col md="auto"><Button onClick={() => navigate("/medico/lista_siguientes_pacientes")} variant="light" size="lg" style={whiteNoBorderButton}>Gestión de la cola</Button></Col>
+                                {props.mostrarHomeyCola? <Col md="auto"><Button onClick={() => navigate("/")} variant="light" size="lg" style={whiteNoBorderButton}>Home</Button></Col> : <></>}
+                                {props.mostrarHomeyCola? <Col md="auto"><Button onClick={() => navigate("/medico/lista_siguientes_pacientes")} variant="light" size="lg" style={whiteNoBorderButton}>Gestión de la cola</Button></Col> : <></>}
                                 <Col md="auto"><Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteNoBorderButton}>Contacto</Button></Col>
-                                <Col md="auto"><Button onClick={logout} variant="light" size="lg" style={greenButtonStyle}>Logout</Button></Col>
+                                <Col md="auto"><Button onClick={login_logout_action} variant="light" size="lg" style={greenButtonStyle}>{props.loggedIn? "Logout" : "Login"}</Button></Col>
                             </Row>
                         </Container>
                     </Navbar.Text>

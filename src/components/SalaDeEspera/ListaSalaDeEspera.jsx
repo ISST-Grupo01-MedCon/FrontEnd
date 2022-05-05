@@ -26,6 +26,7 @@ const useAudio = url => {
     useEffect(() => {
             playing ? audio.play() : audio.pause();
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [playing]
     );
 
@@ -34,23 +35,23 @@ const useAudio = url => {
         return () => {
             audio.removeEventListener('ended', () => setPlaying(false));
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return [playing, toggle];
 };
 
 export const ListaSalaDeEspera = (props) => {
-    const [datosPacientesLlamados, setDatosPacientesLlamados] = useState(props.datosPacientesLlamados);
+    const [datosPacientesLlamados, setDatosPacientesLlamados] = useState([]);
     const [backgroundColor, setbackgroundColor] = useState("#FFFFFF");
     const [color, setColor] = useState("#000000");
     const [fontWeight, setFontWeight] = useState("");
     const [repeticiones, setRepeticiones] = useState(0);
-    const [playing, toggle] = useAudio("/windows-notificacion.mp3");
+    const [, toggle] = useAudio("/windows-notificacion.mp3");
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = await (await fetch('/consultas')).json();
-            return data;
+        const fetchDataConsultas = async () => {
+            return await fetch('/consultas');
         }
 
         const parpadeo = () => {
@@ -60,38 +61,40 @@ export const ListaSalaDeEspera = (props) => {
         }
 
         const timer = setInterval(() => {
-            fetchData()
-                .catch(console.error)
-                .then(data => {
-                    fetchData()
-                        .catch(console.error)
-                        .then(data => {
-                            let arrayPL = [];
+            fetchDataConsultas()
+                .then(respuesta => {
+                    return respuesta.json()
+                })
+                .then(consultas => {
+                    let arrayPL = [];
 
-                            // Buscamos los pacientes llamados de la lista de consultas descargada del BackEnd
-                            for (let i in data) {
-                                if ((data[i].ticketId !== null) && (data[i].ticketId !== undefined) && (data[i].ticketId !== "") && data[i].llamado ) {
-                                    // Si tiene ticketID y tiene llamado a true, es un paciente llamado desde la sala de espera
-                                    arrayPL.push({ticketID: data[i].ticketId , id: parseInt(data[i].id), consulta: "PEDIATRÍA"});
-                                }
-                            }
+                    // Buscamos los pacientes llamados de la lista de consultas descargada del BackEnd
+                    for (let i in consultas) {
+                        if ((consultas[i].ticketId !== null) && (consultas[i].ticketId !== undefined) && (consultas[i].ticketId !== "") && consultas[i].llamado) {
+                            // Si tiene ticketID y tiene llamado a true, es un paciente llamado desde la sala de espera
+                            arrayPL.push({ticketID: consultas[i].ticketId , id: parseInt(consultas[i].id), consulta: props.salaDeConsulta});
+                        }
+                    }
 
-                            // Se buscan cambios en la primera fila
-                            if (((datosPacientesLlamados.length === 0) && (arrayPL.length > 0))|| ((arrayPL.length > 0) && (datosPacientesLlamados.length > 0) && (arrayPL[0].ticketID !== datosPacientesLlamados[0].ticketID)) || (repeticiones > 0)) {
-                                // Repetimos el parpadeo 9 + 1 = 10 veces
-                                setRepeticiones(repeticiones === 0? 9 : repeticiones - 1);
-                                if (repeticiones === 0)
-                                    toggle();
-                                parpadeo();
-                            }
+                    // Se buscan cambios en la primera fila
+                    if (((datosPacientesLlamados.length === 0) && (arrayPL.length > 0))|| ((arrayPL.length > 0) && (datosPacientesLlamados.length > 0) && (arrayPL[0].ticketID !== datosPacientesLlamados[0].ticketID)) || (repeticiones > 0)) {
+                        // Repetimos el parpadeo 9 + 1 = 10 veces
+                        setRepeticiones(repeticiones === 0? 9 : repeticiones - 1);
+                        if (repeticiones === 0)
+                            toggle();
+                        parpadeo();
+                    }
 
-                            setDatosPacientesLlamados(arrayPL);
+                    setDatosPacientesLlamados(arrayPL);
 
-                            clearInterval(timer)
-                        });
+                    clearInterval(timer);
+                })
+                .catch(() => {
+                    console.log("Se ha producido un error realizando el fetch de la lista de consultas del BackEnd.");
                 });
         }, 500);
         return () => clearInterval(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datosPacientesLlamados, repeticiones, backgroundColor, color, fontWeight]);
 
     return(

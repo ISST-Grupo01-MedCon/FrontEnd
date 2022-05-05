@@ -27,7 +27,7 @@ export const DetallesPaciente = (props) => {
     const navigate = useNavigate();
     const query = props.useQuery();
     const from = query.get("from");
-    const idSiguientePaciente = props.getIDSiguientePaciente(parseInt(id));
+    const idSiguienteConsulta = props.getIDSiguienteConsulta(parseInt(id));
     const volver = () => {
         if (from === "pd")
             navigate("/medico/lista_pacientes_descartados");
@@ -37,7 +37,7 @@ export const DetallesPaciente = (props) => {
             navigate("/medico/lista_siguientes_pacientes");
             // Al volver de ver los detalles de un paciente ya se le habrá pasado consulta, por lo que se le quita de
             // la pantalla de siguientes pacientes si estaba en ella anteriormente.
-            props.setLlamado(id, false, "PEDIATRÍA");
+            props.setLlamado(id, false, props.salaDeConsulta);
         }
     };
     const irANuevaConsultaPaciente = () => {
@@ -86,7 +86,7 @@ export const DetallesPaciente = (props) => {
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irANuevaConsultaPaciente}>Nueva consulta</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irARecetasPaciente}>Ver recetas</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irAPruebasPaciente}>Pruebas médicas</Button></Row>
-                    {((from !== "tp") && (from !== "pd")) ? <Row>{(idSiguientePaciente === -1) ? <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.setLlamado(idSiguientePaciente, true, "PEDIATRÍA"); props.cambiarModoPaciente("atendido", id); navigate("/medico/detalles_paciente/"+idSiguientePaciente);}}>Siguiente paciente</Button>}</Row> : <></>}
+                    {((from !== "tp") && (from !== "pd")) ? <Row>{(idSiguienteConsulta === -1) ? <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.setLlamado(idSiguienteConsulta, true, props.salaDeConsulta); props.cambiarModoPaciente("atendido", id); navigate("/medico/detalles_paciente/"+idSiguienteConsulta);}}>Siguiente paciente</Button>}</Row> : <></>}
                 </Col>
             </Row>
         </Container>
