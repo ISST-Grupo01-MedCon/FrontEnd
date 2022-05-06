@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import {HomePreLogin} from "./components/HomePreLogin";
 
 test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
+  render(<HomePreLogin />);
+  const linkElement = screen.getByText(/Inicie sesión para acceder a las funcionalidades/i);
   expect(linkElement).toBeInTheDocument();
 });
