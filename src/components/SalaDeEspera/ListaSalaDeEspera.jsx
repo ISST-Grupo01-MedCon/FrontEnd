@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Container, Table} from "react-bootstrap";
+import ReactPlayer from 'react-player';
 
 const Fila = (props) => {
     const style = (props.color) ? {backgroundColor: props.backgroundColor, color: props.color, fontWeight: props.fontWeight} : {};
@@ -17,29 +18,29 @@ const Filas = (props) => {
     }));
 }
 
-const useAudio = url => {
-    const [audio] = useState(new Audio(url));
-    const [playing, setPlaying] = useState(false);
+// const useAudio = url => {
+//     const [audio] = useState(new Audio(url));
+//     const [playing, setPlaying] = useState(false);
 
-    const toggle = () => setPlaying(!playing);
+//     const toggle = () => setPlaying(!playing);
 
-    useEffect(() => {
-            playing ? audio.play() : audio.pause();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [playing]
-    );
+//     useEffect(() => {
+//             playing ? audio.play() : audio.pause();
+//         },
+//         // eslint-disable-next-line react-hooks/exhaustive-deps
+//         [playing]
+//     );
 
-    useEffect(() => {
-        audio.addEventListener('ended', () => setPlaying(false));
-        return () => {
-            audio.removeEventListener('ended', () => setPlaying(false));
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+//     useEffect(() => {
+//         audio.addEventListener('ended', () => setPlaying(false));
+//         return () => {
+//             audio.removeEventListener('ended', () => setPlaying(false));
+//         };
+//         // eslint-disable-next-line react-hooks/exhaustive-deps
+//     }, []);
 
-    return [playing, toggle];
-};
+//     return [playing, toggle];
+// };
 
 export const ListaSalaDeEspera = (props) => {
     const [datosPacientesLlamados, setDatosPacientesLlamados] = useState([]);
@@ -47,7 +48,8 @@ export const ListaSalaDeEspera = (props) => {
     const [color, setColor] = useState("#000000");
     const [fontWeight, setFontWeight] = useState("");
     const [repeticiones, setRepeticiones] = useState(0);
-    const [, toggle] = useAudio("/windows-notificacion.mp3");
+    const [mostrarEfectos, setEfectos] = useState(false);
+    //const [, toggle] = useAudio("../../audio/windows-notificacion.mp3");
     props.setSincronizarCambios(false);
 
     useEffect(() => {
@@ -100,7 +102,7 @@ export const ListaSalaDeEspera = (props) => {
                                 if (!encontrado) return elemento;
                             }
                             let nuevoArrayPL;
-                            let mostrarEfectos = false;
+                            setEfectos(false);
                             // Se comprueba elemento a elemento si tienen diferencias, sin importar el orden
                             let cambio = parseInt(datosPacientesLlamados.length) !== parseInt(arrayPL.length);
                             if (!cambio) {
@@ -127,7 +129,7 @@ export const ListaSalaDeEspera = (props) => {
                                     nuevoArrayPL = nuevasConsultasLlamadas.concat(nuevoArrayPL);
                                     // Se muestran los efectos para notificar a los pacientes llamados
                                     setRepeticiones(0);
-                                    mostrarEfectos = true;
+                                    setEfectos(true);
                                 } else {
                                     // No ha cambiado nada
                                     nuevoArrayPL = datosPacientesLlamados;
@@ -156,7 +158,7 @@ export const ListaSalaDeEspera = (props) => {
                                     nuevoArrayPL = anadidos.concat(datosPacientesLlamados);
                                     // Se muestran los efectos para notificar a los pacientes llamados
                                     setRepeticiones(0);
-                                    mostrarEfectos = true;
+                                    setEfectos(true);
                                 }
                             }
 
@@ -164,8 +166,8 @@ export const ListaSalaDeEspera = (props) => {
                             if (mostrarEfectos || (repeticiones > 0)) {
                                 // Repetimos el parpadeo 9 + 1 = 10 veces
                                 setRepeticiones(repeticiones === 0? 9 : repeticiones - 1);
-                                if (repeticiones === 0)
-                                    toggle();
+                                //toggle();
+                                
                                 parpadeo();
                             }
 
@@ -181,8 +183,9 @@ export const ListaSalaDeEspera = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datosPacientesLlamados, repeticiones, backgroundColor, color, fontWeight]);
 
-    return(
-        <Container>
+    if (mostrarEfectos) {
+        return (
+            <Container>
             <Table responsive>
                 <thead>
                 <tr>
@@ -194,5 +197,29 @@ export const ListaSalaDeEspera = (props) => {
                 <Filas datosPacientesLlamados={datosPacientesLlamados} backgroundColor={backgroundColor} color={color} fontWeight={fontWeight}/>
                 </tbody>
             </Table>
-        </Container>);
+            <ReactPlayer 
+            url={require('../../audio/windows-notificacion.mp3')}
+            width="0%"
+            height="0%"
+            playing
+
+            />
+        </Container>
+        )
+    } else {
+        return(
+            <Container>
+                <Table responsive>
+                    <thead>
+                    <tr>
+                        <th>Identificador</th>
+                        <th>Sala de consulta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <Filas datosPacientesLlamados={datosPacientesLlamados} backgroundColor={backgroundColor} color={color} fontWeight={fontWeight}/>
+                    </tbody>
+                </Table>
+            </Container>);
+    }
 };
