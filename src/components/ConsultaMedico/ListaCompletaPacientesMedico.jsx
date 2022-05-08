@@ -9,24 +9,16 @@ const Fila = (props) => {
     return (<tr>
         <td>{props.nombre}</td>
         <td>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("registrado", props.idPaciente, "tp")}><OverlayTrigger placement="top" overlay={<Tooltip>Registrar asistencia</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Asistencia"} src="/asistencia.svg"/></OverlayTrigger></button>
-            <button style={transparentButtonStyle} onClick={() => navigate(`/medico/detalles_paciente/${props.idPaciente}?from=tp`)}><OverlayTrigger placement="top" overlay={<Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoConsultaPaciente("registrado", props.consulta, "consulta")}><OverlayTrigger placement="top" overlay={<Tooltip>Registrar asistencia</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Asistencia"} src="/asistencia.svg"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => navigate(`/medico/detalles_paciente/${props.consulta.id}?from=tp`)}><OverlayTrigger placement="top" overlay={<Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
         </td>
     </tr>);
 };
 
 const Filas = (props) => {
-    const getIDPaciente = (nombrePaciente) => {
-        for (let id in props.datosTodosLosPacientesSinOrdenar) {
-            if (nombrePaciente === props.datosTodosLosPacientesSinOrdenar[id].nombre)
-                return id;
-        }
-        return -1;
-    };
-
     return(
         props.datosTodosLosPacientes.map((paciente, pos) => {
-            return(<Fila key={pos} idPaciente={getIDPaciente(paciente.nombre)} nombre={paciente.nombre} cambiarModoPaciente={props.cambiarModoPaciente}/>
+            return(<Fila key={pos} consulta={props.getConsultaFromNombrePaciente(paciente.nombre)} nombre={paciente.nombre} cambiarModoConsultaPaciente={props.cambiarModoConsultaPaciente}/>
             );
         })
     );
@@ -50,7 +42,7 @@ export const ListaCompletaPacientesMedico = (props) => {
                 </tr>
                 </thead>
                 <tbody>
-                    <Filas datosTodosLosPacientes={listaOrdenadaAlfabeticamente} datosTodosLosPacientesSinOrdenar={props.datosTodosLosPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
+                    <Filas datosTodosLosPacientes={listaOrdenadaAlfabeticamente} getConsultaFromNombrePaciente={props.getConsultaFromNombrePaciente} datosTodosLosPacientesSinOrdenar={props.datosTodosLosPacientes} cambiarModoConsultaPaciente={props.cambiarModoConsultaPaciente}/>
                 </tbody>
             </Table>
         </Container>);

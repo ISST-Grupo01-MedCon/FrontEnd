@@ -1,5 +1,5 @@
 import {Alert, Button, Col, Container, Form, Row} from "react-bootstrap";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {greenButtonStyle, headerStyle, whiteButtonStyle} from "../../styles";
 import {useCookies} from "react-cookie";
@@ -9,34 +9,51 @@ export const LoginMedico = (props) => {
     const [password, setPassword] = useState("");
     const [show, setShow] = useState(false);
     const [, setCookie, ] = useCookies(['medico']);
+    const [useEffectListo, setUseEffectListo] = useState(false);
+    const [autenticarMedico, setAutenticarMedico] = useState(false);
 
     const navigate = useNavigate();
 
     const submitLogin = async (event) => {
         event.preventDefault();
-        let respuesta = await fetch("/medico/autenticar", {
-            "headers": {
-                "content-type": "application/x-www-form-urlencoded"
-            },
-            "method": "POST",
-            "body": "username="+IDMedico+"&password="+password
-        })
-        if (parseInt(respuesta.status) === 401)
-            setShow(true);
-        else {
-            let doctores = await props.peticionHTML('/medicos');
-            for (let doctor of doctores) {
-                if (doctor.usuario === IDMedico) {
-                    // Guardamos el nombre del doctor en una cookie
-                    setCookie('usuarioMedico', doctor.usuario, { path: '/' });
-                    props.setDoc(doctor);
-                    props.setLoggedIn(true);
-                    navigate("/");
-                    break;
-                }
-            }
-        }
+        setAutenticarMedico(true);
     }
+
+    useEffect(() => {
+        if (useEffectListo) {
+            fetch("/medico/autenticar", {
+                "headers": {
+                    "content-type": "application/x-www-form-urlencoded"
+                },
+                "method": "POST",
+                "body": "username="+IDMedico+"&password="+password
+            }).then(respuesta => {
+                if (parseInt(respuesta.status) === 401)
+                    setShow(true);
+                else {
+                    fetch('/medicos')
+                        .then(respuesta => respuesta.json())
+                        .then(medicos => {
+                            for (let medico of medicos) {
+                                if (medico.usuario === IDMedico) {
+                                    // Guardamos el nombre del doctor en una cookie
+                                    setCookie('usuarioMedico', IDMedico, { path: '/' });
+                                    props.setDoc(medico);
+                                    props.setLoggedIn(true);
+                                    navigate("/");
+                                    break;
+                                }
+                            }
+                        })
+                        .catch(() => setShow(true))
+                }
+            }).catch(() => setShow(true))
+            setAutenticarMedico(false);
+        } else {
+            setUseEffectListo(true);
+        }
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autenticarMedico]);
 
     return(
         <Container>

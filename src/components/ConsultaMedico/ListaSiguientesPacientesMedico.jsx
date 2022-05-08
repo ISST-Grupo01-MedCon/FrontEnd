@@ -56,17 +56,17 @@ const Fila = (props) => {
         <td>{props.identificador}</td>
         <td>{props.nombre}</td>
         <td>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("atendido", props.idConsulta, "sp")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
-            <button style={transparentButtonStyle} onClick={() => props.cambiarModoPaciente("descartado", props.idConsulta)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Descartar</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Cruz"} src="/cruz.png"/></OverlayTrigger></button>
-            <button style={transparentButtonStyle} onClick={() => navigate("/medico/detalles_paciente/"+props.idConsulta)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoConsultaPaciente("atendido", props.consulta, "consulta")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Marcar como atendido</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Tick"} src="/tick.png"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => props.cambiarModoConsultaPaciente("descartado", props.consulta, "consulta")}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Descartar</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Cruz"} src="/cruz.png"/></OverlayTrigger></button>
+            <button style={transparentButtonStyle} onClick={() => navigate("/medico/detalles_paciente/"+props.consulta.id)}><OverlayTrigger placement="top" overlay={(props.tooltips === "no") ? <></> : <Tooltip>Más opciones</Tooltip>}><img width={ladoIconosNormales} height={ladoIconosNormales} alt={"Ajustes"} src="/options.svg"/></OverlayTrigger></button>
         </td>
     </tr>);
 };
 
 const Filas = (props) => {
     return(props.datosSiguientesPacientes.map((consulta, pos) => {
-        return(<Fila key={pos} id={consulta.ticketId} idConsulta={consulta.id} identificador={consulta.ticketId}
-                     nombre={consulta.paciente} cambiarModoPaciente={props.cambiarModoPaciente}/>);
+        return(<Fila key={pos} id={consulta.ticketId} consulta={consulta} identificador={consulta.ticketId}
+                     nombre={consulta.paciente} cambiarModoConsultaPaciente={props.cambiarModoConsultaPaciente}/>);
     }));
 }
 
@@ -102,10 +102,9 @@ export const ListaSiguientesPacientesMedico = (props) => {
 
     const llamarPrimerPaciente = () => {
         if (datosSiguientesPacientes.length > 0) {
-            let idConsulta = datosSiguientesPacientes[0].id;
-            navigate("/medico/detalles_paciente/"+idConsulta);
-            props.setLlamado(idConsulta, true);
-            props.cambiarModoPaciente("atendido", idConsulta);
+            let consulta = datosSiguientesPacientes[0];
+            navigate("/medico/detalles_paciente/"+consulta.id);
+            props.cambiarModoConsultaPaciente("llamado", consulta, "consulta");
         }
     }
 
@@ -131,7 +130,7 @@ export const ListaSiguientesPacientesMedico = (props) => {
                         </tr>
                         </thead>
                         <tbody>
-                            <Filas datosSiguientesPacientes={datosSiguientesPacientes} cambiarModoPaciente={props.cambiarModoPaciente}/>
+                            <Filas datosSiguientesPacientes={datosSiguientesPacientes} cambiarModoConsultaPaciente={props.cambiarModoConsultaPaciente}/>
                         </tbody>
                     </Table>
                     <DragOverlay wrapperElement="div">{activeId ? <Table responsive style={movingRowStyle}><tbody><Fila tooltips="no" idPaciente={0} identificador={activeId} nombre={datosSiguientesPacientes[getIndexFromIdentificador(datosSiguientesPacientes, activeId)].paciente}/></tbody></Table> : null}</DragOverlay>

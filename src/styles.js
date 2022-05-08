@@ -63,6 +63,10 @@ export const whiteNoBorderButton = {
     border: "none"
 };
 
+export const errorPageMargins = {
+    paddingTop: "300px"
+};
+
 export const ladoCruzPequena = 35;
 export const ladoLapizPequeno = 30;
 

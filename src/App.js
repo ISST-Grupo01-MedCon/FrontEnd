@@ -23,6 +23,8 @@ import {HomePreLogin} from "./components/HomePreLogin";
 //Datos
 import {data as dataHistoriaClinica} from './data/historiaClinica';
 import {useCookies} from "react-cookie";
+import {PaginaDeCarga} from "./components/PaginaDeCarga";
+import {PaginaDeError} from "./components/PaginaDeError";
 
 function useQuery() {
     const { search } = useLocation();
@@ -30,67 +32,197 @@ function useQuery() {
     return React.useMemo(() => new URLSearchParams(search), [search]);
 }
 
+const mostrarTrazas = false;
+
+/**
+ * Función que imprime logs solo cuando mostrarTrazas está a true.
+ * Se debe usar con registros que no sean importantes.
+ * @param text el texto que se desea imprimir por consola.
+ */
+export const log = (text) => {
+    if (mostrarTrazas)
+        console.log(text);
+};
+
 function App() {
-  const [datosTodosLosPacientes, setDatosTodosLosPacientes] = useState([]);
-  const [datosConsultas, setDatosConsultas] = useState([]);
-  const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica)));
-  const [interfazLista, setinterfazLista] = useState(false);
-  const [doc, setDoc] = useState("");
-  const [salaDeEspera, ] = useState("Sala de espera primera planta");
-  const [loggedIn, setLoggedIn] = useState(undefined);
-  const [useEffectListo, setUseEffectListo] = useState(false);
-  const [cookies, setCookie] = useCookies(['medico']);
+  const [datosTodosLosPacientes, setDatosTodosLosPacientes] = useState([]); // Array de datos de todos los pacientes
+  const [datosConsultas, setDatosConsultas] = useState([]); // Array de consultas que solo debe contener las del médico actual
+  const [datosHistoriaClinica] = useState(JSON.parse(JSON.stringify(dataHistoriaClinica))); // Array con la historia clínica de un paciente
+  const [interfazLista, setInterfazLista] = useState(false); // Permite activar o desactivar la pantalla de carga
+  const [doc, setDoc] = useState(""); // Permite cambiar el médico que ha iniciado sesión
+  const [salaDeEspera, ] = useState("Sala de espera primera planta"); // Permite establecer el nombre de la sala de espera que gestiona nuestro médico
+  const [loggedIn, setLoggedIn] = useState(); // Permite saber si se ha iniciado sesión o no para bloquear ciertas funcionaliades
+  const [useEffectListo, setUseEffectListo] = useState(false); // Permite bloquear la primera llamada al useEffect cuando se lanza demasiado pronto
+  const [loggedInComprobado, setLoggedInComprobado] = useState(false); // Permite saber si ya se ha comprobado si se ha iniciado sesión de forma autónoma para no volverlo a hacer
+  const [cookies, setCookie] = useCookies(['medico']); // Permite leer y modificar la cookie del médico, que almacena su nombre de usuario
+  const [consultasNuevas, setConsultasNuevas] = useState(); // Array que almacena las nuevas consultas tras un cambio que todavía no se ha procesado
+  const [doctorNuevo, setDoctorNuevo] = useState(); // Variable que almacena el nuevo médico tras un cambio que todavía no se ha procesado
+  const [fetchsPendientes, setFetchsPendientes] = useState([]); // Array de peticiones fetch que tiene pendiente realizar el useEffect
+  const [sincronizarCambios, setSincronizarCambios] = useState(true); // Variable que permite detener la sincronizacion de cambios en determinadas páginas que no lo necesitan
+
+  /**
+   * Función que permite solicitar el lanzamiento de un fetch desde el useEffect más tarde
+   * @param URL URL destino de la petición
+   * @param metodo método de la petición. Por defecto GET
+   * @param body el cuerpo de la petición. Por defecto no se define
+   */
+  const peticionHTMLEnSegundoPlano = (URL, metodo = 'GET', body = undefined) => {
+      fetchsPendientes.push({URL: URL, metodo: metodo, body: body});
+  };
+
+  /**
+   * Función que devuelve una consulta a partir de su id
+   * @param idConsulta id de la consulta
+   * @returns la consulta con dicho id si se encuentra
+   */
+  const getConsultaFromId = (idConsulta) => {
+      let consultas = getConsultas(datosConsultas);
+      for (let consulta of consultas) {
+          if (parseInt(consulta.id) === parseInt(idConsulta))
+              return consulta;
+      }
+  };
+
+  /**
+   * Función que permite sustituir una consulta en el array de consultas.
+   * @param consulta la consulta que se desea sustituir
+   * @returns el array de consultas actualizado
+   */
+  const sustituirConsulta = (consulta) => {
+      let consultasAntiguas = getConsultas(datosConsultas);
+      let consultasNuevas = JSON.parse(JSON.stringify(getConsultas(datosConsultas)));
+      for (let i in consultasAntiguas) {
+          if (parseInt(consultasAntiguas[i].id) === parseInt(consulta.id)) {
+              consultasNuevas[i] = consulta;
+              break;
+          }
+      }
+      return consultasNuevas;
+  };
+
+  /**
+   * Función que permite cambiar el estado de una consulta
+   * @param consulta_o_id la consulta que se desea cambiar o su id
+   * @param descartado su valor de descartado
+   * @param llamado su valor de llamado
+   * @param registrado si debe mostrarse en la lista de siguientes pacientes o no
+   */
+  const cambiarConsulta = (consulta_o_id, descartado, llamado, registrado) => {
+      let consulta;
+      if (consulta_o_id.id)
+          consulta = consulta_o_id;
+      else
+          consulta = getConsultaFromId(consulta_o_id);
+
+      if (consulta.descartado !== descartado) {
+          peticionHTMLEnSegundoPlano('/consultas/'+consulta.id+"?valor="+descartado, 'PUT');
+      }
+      consulta.descartado = descartado;
+
+      if (consulta.llamado !== llamado) {
+          peticionHTMLEnSegundoPlano("/consultas/llamada/"+consulta.id+"?valor="+llamado, 'PUT');
+      }
+      consulta.llamado = llamado;
+
+      if (registrado) {
+          addConsultaAOrdenMedico(consulta.id);
+      } else {
+          removeConsultaDeOrdenMedico(consulta.id);
+      }
+
+      // A partir de aquí ya está la consulta lista. Copiamos datosConsultas y lo establecemos
+      setConsultas(sustituirConsulta(consulta));
+  };
 
     /**
-     * Función similar al fetch que simplifica las llamadas al BackEnd
-     * @param URL la dirección a la que se hace la petición
-     * @param metodo el método HTTP que se usará en la petición. Puede ser POST, PUT o GET. Por defecto es GET
-     * @param body parámetro opcional que si está definido lleva el objeto que se enviará a la dirección especificada
-     * @returns {object} objeto recibido de la respuesta a la petición HTML efectuada
+     * Función que permite añadir el id de una consulta al orden de pacientes del médico.
+     * @param idConsulta el id de la consulta que se desea añadir al orden de pacientes del médico.
      */
-    const peticionHTML = async (URL, metodo = 'GET', body = undefined) => {
-        if ((metodo !== 'POST') && (metodo !== 'PUT') && (metodo !== 'GET')) {
-            console.log("ERROR. El método "+metodo+" especificado para hacer una petición a la dirección "+URL+" no es válido.");
-            return
-        } else if ((URL === undefined) || (URL === null)) {
-            console.log("ERROR. La URL especificada para hacer una petición "+metodo+" no puede ser null o undefined.");
-            return
+    const addConsultaAOrdenMedico = (idConsulta) => {
+        let doctor = doc;
+        let ordenPacientes = doctor.ordenPacientes;
+        if (ordenPacientes.indexOf(parseInt(idConsulta)) < 0) {
+            ordenPacientes.push(parseInt(idConsulta));
+            peticionHTMLEnSegundoPlano('/medicos/'+doctor.usuario, 'PUT', ordenPacientes);
+            doctor.ordenPacientes = ordenPacientes;
+            setDoctor(doctor);
         }
-        let parametros = {
-            method: metodo,
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        };
-
-        if (body)
-            parametros.body = JSON.stringify(body);
-
-        let respuestaFetch;
-        await fetch(URL, parametros)
-            .then(respuesta => {
-                return respuesta.json();
-            })
-            .then(respuestaEnJSON => {
-                respuestaFetch = respuestaEnJSON;
-            })
-            .catch(() => console.log("Hubo un fallo al realizar un fetch a "+URL+" con el método "+metodo+(body?" y body"+body:"")));
-
-        if (respuestaFetch)
-            return respuestaFetch;
     };
 
     /**
-     * Función que permite obtener el array de consultas para cada lista de pacientes
+     * Función que permite eliminar el id de una consulta del orden de pacientes del médico.
+     * @param idConsulta el id de la consulta que se desea eliminar del orden de pacientes del médico.
+     */
+    const removeConsultaDeOrdenMedico = (idConsulta) => {
+        let doctor = doc;
+        let ordenPacientes = doctor.ordenPacientes;
+        if (ordenPacientes.indexOf(parseInt(idConsulta)) >= 0) {
+            ordenPacientes.splice(ordenPacientes.indexOf(parseInt(idConsulta)), 1);
+            peticionHTMLEnSegundoPlano('/medicos/'+doctor.usuario, 'PUT', ordenPacientes);
+            doctor.ordenPacientes = ordenPacientes;
+            setDoctor(doctor);
+        }
+    };
+
+    /**
+     * Función que solicita cambiar el médico almacenado al useEffect.
+     * Se debe llamar después de hacer los fetchs necesarios para evitar bloqueas comprobando la sincronización con el
+     * BackEnd.
+     * @param doctorLocal el nuevo médico que se desea establecer.
+     */
+    const setDoctor = (doctorLocal) => {
+        log("Se comienza a cambiar el doctor");
+        setDoctorNuevo(doctorLocal);
+        log("Se deja de cambiar el doctor");
+    };
+
+    /**
+     * Función que solicita cambiar las consultas almacenadas al useEffect.
+     * Se debe llamar después de hacer los fetchs necesarios para evitar bloqueas comprobando la sincronización con el
+     * BackEnd.
+     * @param consultasLocales el nuevo array de consultas que se desea establecer.
+     */
+    const setConsultas = (consultasLocales) => {
+        log("Se comienza a cambiar las consultas");
+        setConsultasNuevas(consultasLocales);
+        log("Se deja de cambiar las consultas");
+    };
+
+    /**
+     * Función que permite eliminar otros pacientes llamados antes de llamar a uno nuevo por el mismo médico.
+     */
+    const quitarOtrosLlamados = () => {
+        let consultasLlamadas = getConsultas(datosConsultas, "PL");
+        for (let consulta of consultasLlamadas) {
+            cambiarModoConsultaPaciente("atendido", consulta, "consulta");
+        }
+    };
+
+    /**
+     * Función que permite obtener la consulta de un paciente a partir de su nombre.
+     * @param nombrePaciente el nombre del paciente del que se busca su consulta.
+     * @returns la consulta del paciente si se ha encontrado.
+     */
+    const getConsultaFromNombrePaciente = (nombrePaciente) => {
+        let consultas = getConsultas(datosConsultas);
+        for (let consulta of consultas) {
+            if (consulta.paciente === nombrePaciente) {
+                return consulta;
+            }
+        }
+        console.log("¡Error! No se ha encontrado la consulta del paciente "+nombrePaciente+" para el médico "+doc.nombre);
+    };
+
+    /**
+     * Función que permite obtener el array de consultas del médico para cada lista de pacientes.
      * @param lista el nombre de la lista que se desea obtener: "SP" para la lista de siguientes pacientes, "PD" para
      * la lista de pacientes descartados o "PL" para la lista de pacientes llamados. Si no se especifica ninguna lista,
      * por defecto se devuelven todas las consultas.
-     * @param datosConsultas el array de consultas que se utilizará para obtener las consultas
-     * @returns array de consultas solicitado
+     * @param datosConsultas el array de todas las consultas que se utilizará para obtener las consultas finales.
+     * @returns array de consultas solicitado.
      */
-    const getConsultas = (datosConsultas, lista = undefined) => {
-        if (!datosConsultas || (datosConsultas.length === 0))
+    const getConsultas = (datosConsultas, lista = undefined, doctor = doc) => {
+        if (!datosConsultas || (datosConsultas.length === 0) || !doc || !doc.ordenPacientes)
             return [];
 
         // Devolvemos un array distinto en función de lo que queremos obtener
@@ -98,7 +230,7 @@ function App() {
             case "SP":
                 let arraySP = [];
                 // Se obtiene el array de consultas de siguientes pacientes a partir del orden del médico
-                for (let id of doc.ordenPacientes) {
+                for (let id of doctor.ordenPacientes) {
                     for (let consulta of datosConsultas) {
                         if (parseInt(consulta.id) === parseInt(id)) {
                             arraySP.push(consulta);
@@ -137,7 +269,9 @@ function App() {
     /**
      * Función que genera un identificador (ticketID) único teniendo en cuenta los que ya existen
      * @returns {string} el ticketID generado
+     * NOTA: por ahora no es necesaria si nunca eliminamos los ticketID obtenidos del BackEnd.
      */
+    // eslint-disable-next-line no-unused-vars
     const generarIdentificadorUnico = () => {
         const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
             'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
@@ -157,239 +291,58 @@ function App() {
     };
 
     /**
-     * Devuelve el ticketID del paciente cuyo ID coincide con el idPaciente especificado
-     * @param idConsulta el ID del paciente buscado
-     * @returns {string} el ticketID si se encuentra o un identificador nuevo generado aleatoriamente
-     * de generar
+     * Función que cambia el estado de una consulta cambiándola de lista.
+     * @param modo el nuevo modo de la consulta (registrado, descartado, llamado o atendido)
+     * @param consulta_o_idConsulta_o_DNI_o_CIPA_paciente
+     * @param tipoDeDato
      */
-    const getTicketIDPaciente = async (idConsulta) => {
-        let consultas = getConsultas(datosConsultas);
-        for (let consulta of consultas) {
-            if (parseInt(consulta.id) === parseInt(idConsulta)) {
-                if ((consulta.ticketId !== null) && (consulta.ticketId !== undefined) && (consulta.ticketId !== "")) {
-                    // Si se ha encontrado un ticketID válido, se usa ese
-                    return consulta.ticketId;
-                } else {
-                    // No tiene ticketID por lo que se le asigna uno
-                    let ticketID = generarIdentificadorUnico();
-                    // Se guarda el ticketID en el BackEnd
-                    consulta.ticketId = ticketID;
-                    let consultas = JSON.parse(JSON.stringify(datosConsultas));
-                    setDatosConsultas(consultas);
-                    await peticionHTML('/paciente/ticketid/' + idConsulta, 'PUT', consulta);
-                    return ticketID;
-                }
-            }
-        }
-        console.log("¡Error! No se ha encontrado la consulta con ID "+idConsulta+" por lo que no se devuelve ningún ticketID");
-    }
-
-    /**
-     * Función para quitar una consulta de la lista de siguientes pacientes
-     * @param consulta
-     * @returns {Promise<void>}
-     */
-    const quitarConsultaSiguientesPacientes = async (consulta) => {
-        if (!doc || !doc.ordenPacientes)
-            return;
-        let ordenPacientes = doc.ordenPacientes;
-        for (let i in doc.ordenPacientes) {
-            if (parseInt(ordenPacientes[i]) === parseInt(consulta.id)) {
-                ordenPacientes.splice(i, 1);
-                break;
-            }
-        }
-        let docNuevo = JSON.parse(JSON.stringify(doc));
-        docNuevo.ordenPacientes = ordenPacientes;
-        setDoc(docNuevo);
-        await peticionHTML('/medicos/'+doc.usuario, 'PUT', ordenPacientes);
-    };
-
-    /**
-     * Función para añadir una consulta de la lista de siguientes pacientes
-     * @param consulta
-     * @returns {Promise<void>}
-     */
-    const agregarConsultaSiguientesPacientes = async (consulta) => {
-        if (!doc || !doc.ordenPacientes)
-            return;
-        let ordenPacientes = doc.ordenPacientes;
-        ordenPacientes.push(consulta.id);
-        let docNuevo = JSON.parse(JSON.stringify(doc));
-        docNuevo.ordenPacientes = ordenPacientes;
-        setDoc(docNuevo);
-        await peticionHTML('/medicos/'+doc.usuario, 'PUT', ordenPacientes);
-    };
-
-    /**
-     * Cambia a los pacientes de lista y estado en local y en el BackEnd
-     * @param modo el nuevo modo del paciente
-     * @param id_o_DNI_o_CIPA_paciente el ID del paciente que se quiere modificar, su DNI o su CIPA para identificarlo
-     * @param desde parámetro opcional que se usa cuando se registran los pacientes desde una lista concreta y se quiere
-     * tratar de forma distinta
-     */
-    const cambiarModoPaciente = async (modo, id_o_DNI_o_CIPA_paciente, desde = undefined) => {
-        let idConsulta = -1;
-        switch (modo) {
-            /**
-             * Se marca un paciente como atendido cuando se ha marcado así manualmente desde la pantalla de siguientes
-             * pacientes o si se establece automáticamente con el botón de llamar al siguiente paciente desde la
-             * lista de siguientes pacientes o al darle al botón de siguiente paciente en la pantalla de detalles de un
-             * paciente
-             */
-            case "atendido":
-                idConsulta = id_o_DNI_o_CIPA_paciente;
-                // Se busca el paciente cuyo ID es el que se ha pasado como parámetro
-                for (let consulta of getConsultas(datosConsultas, "SP")) {
-                    if (parseInt(consulta.id) === parseInt(idConsulta)) {
-                        consulta.llamado = false;
-                        consulta.descartado = false;
-                        // Quitamos la consulta de la lista de pacientes del médico
-                        await quitarConsultaSiguientesPacientes(consulta);
-                        // Forzamos un renderizado de las consultas
-                        let consultas = JSON.parse(JSON.stringify(datosConsultas));
-                        setDatosConsultas(consultas);
-                        break;
-                    }
-                }
-                break;
-            /**
-             * Se marca un paciente como registrado cuando se acaba de registrar personalmente en el kiosko o cuando
-             * el médico registra su presencia manualmente.
-             */
-            case "registrado":
-                let consultaActual;
-                if ((desde === "tp" )|| (desde === "pd") || (desde === "kiosko")) {
-                    if (desde === "kiosko") {
-                        // Desde un kiosko utilizamos el DNI o el CIPA del paciente para identificarlo
-                        let DNIoCIPAPaciente = id_o_DNI_o_CIPA_paciente;
-                        // Buscamos el paciente en la lista de todos los pacientes para obtener su id
-                        forGlobal: for (let paciente of datosTodosLosPacientes)
-                            if ((paciente.dni === DNIoCIPAPaciente) || (parseInt(paciente.cipa) === parseInt(DNIoCIPAPaciente)))
-                                // Buscamos la cita que tiene con el médico actual
-                                for (let idConsultaPaciente of paciente.citas) {
-                                    for (let consulta of getConsultas(datosConsultas)) {
-                                        if ((consulta.medico === doc.usuario) && (parseInt(idConsultaPaciente)) === parseInt(consulta.id)) {
-                                            idConsulta = consulta.id;
-                                            consultaActual = consulta
-                                            break forGlobal;
-                                        }
-                                    }
-                                }
-                    } else {
-                        // Desde las listas de pacientes del médico utilizamos el ID de la consulta para identificarla
-                        idConsulta = id_o_DNI_o_CIPA_paciente;
-                        for (let consulta of getConsultas(datosConsultas)) {
-                            if (parseInt(idConsulta) === parseInt(consulta.id)) {
-                                consultaActual = consulta;
-                                break;
+    const cambiarModoConsultaPaciente = (modo, consulta_o_idConsulta_o_DNI_o_CIPA_paciente, tipoDeDato) => {
+        // Primero se busca la consulta pedida a partir de los datos de los parámetros.
+        let consulta;
+        if (tipoDeDato === "consulta") {
+            consulta = consulta_o_idConsulta_o_DNI_o_CIPA_paciente;
+        } else if (tipoDeDato === "idConsulta") {
+            consulta = getConsultaFromId(consulta_o_idConsulta_o_DNI_o_CIPA_paciente);
+        } else if ((tipoDeDato === "DNI") || (tipoDeDato === "CIPA")) {
+            // Desde un kiosko utilizamos el DNI o el CIPA del paciente para identificarlo
+            let DNIoCIPAPaciente = consulta_o_idConsulta_o_DNI_o_CIPA_paciente;
+            // Buscamos el paciente en la lista de todos los pacientes para obtener su id
+            forGlobal: for (let paciente of datosTodosLosPacientes) {
+                if ((paciente.dni === DNIoCIPAPaciente) || (parseInt(paciente.cipa) === parseInt(DNIoCIPAPaciente)))
+                    // Buscamos la cita que tiene con el médico actual
+                    for (let idConsultaPaciente of paciente.citas) {
+                        for (let c of getConsultas(datosConsultas)) {
+                            if ((c.medico === doc.usuario) && (parseInt(idConsultaPaciente)) === parseInt(c.id)) {
+                                consulta = c;
+                                break forGlobal;
                             }
                         }
                     }
-                    // Seguimos solo si el idPaciente que tenemos es válido
-                    if (parseInt(idConsulta) !== -1) {
-                        // Se verifica si el paciente ya estaba registrado comprobando que no esté ya incluido en la
-                        // lista de siguientes pacientes.
-                        for (let consulta of getConsultas(datosConsultas, "SP")) {
-                            // Si el paciente ya está registrado, no se hace nada más
-                            if (parseInt(consulta.id) === parseInt(idConsulta))
-                                return;
-                        }
-                        // Si el paciente no tenía un ticketID guardado, se le asigna uno nuevo
-                        let ticketID = getTicketIDPaciente(idConsulta);
-                        // Se guardan los cambios en local
-                        consultaActual.ticketId = ticketID;
-                        consultaActual.descartado = false;
-                        consultaActual.llamado = false;
-                        // Forzamos un renderizado de las consultas
-                        let consultas = JSON.parse(JSON.stringify(datosConsultas));
-                        setDatosConsultas(consultas);
-                        // Se agrega la consulta a la lista de siguientes pacientes del médico
-                        await agregarConsultaSiguientesPacientes(consultaActual);
-                        // Marcamos el paciente como registrado en el BackEnd (ponemos descartado a false)
-                        await peticionHTML('/consultas/'+idConsulta+"?valor=false", 'PUT');
-                    }
-                }
+            }
+        }
+        if (!consulta) {
+            console.log("¡Error! Se está intentando cambiar el modo de la consulta con el dato "+consulta_o_idConsulta_o_DNI_o_CIPA_paciente+" de tipo "+tipoDeDato+", pero no se ha encontrado su consulta asociada. No se hace nada más.");
+            return;
+        }
+        // A continuación se procede a cambiar el estado de la consulta.
+        switch (modo) {
+            case "registrado":
+                cambiarConsulta(consulta, false, false, true, false);
                 break;
-            /**
-             * Se marca un paciente como descartado cuando tiene una cita para el día de hoy, pero todavía no se ha
-             * registrado en el kiosko, o cuando un médico descarta manualmente a un paciente ya registrado de la lista
-             * de siguientes pacientes por cualquier motivo que haya impedido su cita, pudiendo volver a registrar a
-             * dicho paciente desde la lista de pacientes descartados si hiciera falta.
-             */
             case "descartado":
-                // Registramos el ID de la consulta del paciente directamente del parámetro recibido en la función
-                idConsulta = id_o_DNI_o_CIPA_paciente;
-                // Buscamos la consulta con dicho ID
-                for (let consulta of getConsultas(datosConsultas)) {
-                    if (parseInt(consulta.id) === parseInt(idConsulta)) {
-                        consulta.descartado = true;
-                        consulta.llamado = false;
-                        // Forzamos un renderizado de las consultas
-                        let consultas = JSON.parse(JSON.stringify(datosConsultas));
-                        setDatosConsultas(consultas);
-
-                        // Quitamos el paciente de la lista de siguientes pacientes del médico
-                        await quitarConsultaSiguientesPacientes(consulta);
-
-                        // Marcamos el paciente como descartado en el BackEnd (ponemos descartado a true)
-                        await peticionHTML('/consultas/'+idConsulta+"?valor=true", 'PUT');
-                        break;
-                    }
-                }
+                cambiarConsulta(consulta, true, false, false, false);
+                break;
+            case "llamado":
+                // Quitamos los otros pacientes llamados por este médico antes de llamar a uno nuevo
+                quitarOtrosLlamados(false);
+                cambiarConsulta(consulta, false, true, false, false);
+                break;
+            case "atendido":
+                cambiarConsulta(consulta, false, false, false, false);
                 break;
             default:
                 break;
         }
-    }
-
-    /**
-     * Permite establecer el atributo llamado de un paciente dentro de una de sus consultas a un valor concreto
-     * @param idConsulta el ID de la consulta del paciente que se quiere llamar en la pantalla de la sala de espera
-     * sala de espera
-     * @param llamado el valor de llamado
-     */
-    const setLlamado = async (idConsulta, llamado) => {
-        if (llamado) {
-            // No llamamos un paciente si ya está en la lista de pacientes llamados
-            for (let consulta of getConsultas(datosConsultas, "PL")) {
-                if (parseInt(consulta.id) === parseInt(idConsulta))
-                    return;
-            }
-            // Borramos, si lo hay, el paciente llamado anteriormente de la misma sala de consulta de la lista de
-            // pacientes llamados:
-            for (let consulta in getConsultas(datosConsultas, "PL")) {
-                if (consulta.medico === doc.nombre) {
-                    consulta.llamado = false;
-                    // Guardamos el nuevo valor de llamado en el BackEnd
-                    await peticionHTML("/consultas/llamada/"+consulta.id+"?valor=false", 'PUT');
-                    break;
-                }
-            }
-            // Buscamos la consulta del paciente para poner llamado a true
-            for (let consulta in getConsultas(datosConsultas)) {
-                if (parseInt(idConsulta) === parseInt(consulta.id)) {
-                    consulta.llamado = true;
-
-                    // Guardamos el nuevo valor de llamado en el BackEnd
-                    await peticionHTML("/consultas/llamada/"+idConsulta+"?valor=true", 'PUT');
-                    break;
-                }
-            }
-        } else {
-            // Buscamos el paciente en la lista de pacientes llamados
-            for (let consulta of getConsultas(datosConsultas, "PL")) {
-                if (parseInt(idConsulta) === parseInt(consulta.id)) {
-                    consulta.llamado = false;
-                    // Guardamos el nuevo valor de llamado en el BackEnd
-                    await peticionHTML("/consultas/llamada/"+consulta.id+"?valor=false", 'PUT');
-                    break;
-                }
-            }
-        }
-        // Guardamos los cambios en local
-        let consultas = JSON.parse(JSON.stringify(datosConsultas));
-        setDatosConsultas(consultas);
     };
 
     /**
@@ -422,11 +375,11 @@ function App() {
     };
 
     /**
-     * Devuelve la siguiente consulta que se deberá atender según el orden de la lista de siguientes pacientes
-     * @param idConsultaActual el ID de la consulta que se está atendiendo actualmente
-     * @returns {number} el ID de la consulta del siguiente paciente al que hay que atender
+     * Devuelve la siguiente consulta que se deberá atender según el orden de la lista de siguientes pacientes.
+     * @param idConsultaActual el ID de la consulta que se está atendiendo actualmente.
+     * @returns la consulta del siguiente paciente al que hay que atender.
      */
-    const getIDSiguienteConsulta = (idConsultaActual) => {
+    const getSiguienteConsulta = (idConsultaActual) => {
         let arraySP = JSON.parse(JSON.stringify(getConsultas(datosConsultas, "SP")));
         let posActual = -1;
         for (let i in arraySP) {
@@ -437,77 +390,157 @@ function App() {
         }
         if (posActual !== -1) // El siguiente paciente no puede ser el mismo
             arraySP.splice(posActual, 1);
-        return (arraySP[0]? arraySP[0].id : -1);
+        return (arraySP[0]? arraySP[0] : undefined);
     };
 
     /**
      * Actualiza el orden de los pacientes en local y en el BackEnd.
      * @param arraySP el nuevo array de siguientes pacientes reordenado.
      */
-    const cambiarOrdenPacientes = async (arraySP) => {
-        // A continuación generamos un array con los IDs de los pacientes reordenados para subirlo al BackEnd:
-        let nuevoOrden = [];
+    const cambiarOrdenPacientes = (arraySP) => {
+        // Generamos un array con los IDs de los pacientes reordenados para subirlo al BackEnd:
+        let doctor = doc;
+        let ordenPacientes = [];
         for (let paciente of arraySP)
-            nuevoOrden.push(paciente.id);
-        // Guardamos los datos en local
-        let docNuevo = JSON.parse(JSON.stringify(doc));
-        docNuevo.ordenPacientes = nuevoOrden;
-        setDoc(docNuevo);
-        setDatosConsultas(datosConsultas);
-        // Guardamos el orden en el BackEnd
-        await peticionHTML('/medicos/'+doc.usuario, 'PUT', nuevoOrden);
+            ordenPacientes.push(paciente.id);
+
+        // Guardamos el orden en local y en el BackEnd
+        peticionHTMLEnSegundoPlano('/medicos/'+doctor.usuario, 'PUT', ordenPacientes);
+        doctor.ordenPacientes = ordenPacientes;
+        setDoctor(doctor);
     };
+
+
 
     useEffect(() => {
         /**
-         * Función que descarga la lista de consultas completa
-         * @returns respuesta del fetch de descarga de la lista de consultas completa
+         * Función similar al fetch que simplifica las llamadas al BackEnd
+         * @param URL la dirección a la que se hace la petición
+         * @param metodo el método HTTP que se usará en la petición. Puede ser POST, PUT o GET. Por defecto es GET
+         * @param body parámetro opcional que si está definido lleva el objeto que se enviará a la dirección especificada
+         * @returns {object} objeto recibido de la respuesta a la petición HTML efectuada
+         */
+        const peticionHTML = async (URL, metodo = 'GET', body = undefined) => {
+            if ((metodo !== 'POST') && (metodo !== 'PUT') && (metodo !== 'GET')) {
+                console.log("ERROR. El método "+metodo+" especificado para hacer una petición a la dirección "+URL+" no es válido.");
+                return
+            } else if ((URL === undefined) || (URL === null)) {
+                console.log("ERROR. La URL especificada para hacer una petición "+metodo+" no puede ser null o undefined.");
+                return
+            }
+            let parametros = {
+                method: metodo,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (body)
+                parametros.body = JSON.stringify(body);
+
+            let respuestaFetch;
+            await fetch(URL, parametros)
+                .then(respuesta => respuesta.json())
+                .then(respuestaEnJSON => {
+                    respuestaFetch = respuestaEnJSON;
+                })
+                .catch(() => console.log("Hubo un fallo al realizar un fetch a "+URL+" con el método "+metodo+(body?" y body"+body:"")));
+
+            if (respuestaFetch)
+                return respuestaFetch;
+            else
+                return await Promise.reject("Hubo un fallo al realizar un fetch a " + URL + " con el método " + metodo + (body ? " y body" + body : ""));
+        };
+
+        /**
+         * Función que permite lanzar los fetch pendientes de procesarse.
+         */
+        const lanzarFetchsPendientes = async () => {
+            // Se lanzan las peticiones pendientes
+            let fetchs = fetchsPendientes;
+            for (let i in fetchsPendientes) {
+                try {
+                    await peticionHTML(fetchs[i].URL, fetchs[i].metodo, fetchs[i].body);
+                    fetchs.splice(i, 1);
+                } catch (e) {
+                    console.log("Hubo un error realizando un fetch pendiente");
+                }
+            }
+            setFetchsPendientes(fetchs);
+        }
+
+        /**
+         * Función que descarga la lista de consultas completa y/o establece nuevas consultas y/o médicos.
          */
         const fetchDataConsultas = async () => {
-            try {
-                await fetch('/consultas')
-                    .then(respuesta => {
-                        return respuesta.json()
-                    })
-                    .then(consultas => {
+            if (!consultasNuevas && !doctorNuevo && sincronizarCambios) {
+                await peticionHTML('/consultas')
+                    .then(async consultas => {
                         // Guardamos todas las consultas en datosConsultas solo si ha habido cambios:
-                        let cambios = (parseInt(datosConsultas.length) !== parseInt(consultas.length));
-                        if (!cambios) {
-                            for (let i in consultas) {
-                                if (JSON.stringify(consultas[i]) !== JSON.stringify(datosConsultas[i])) {
-                                    cambios = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (cambios)
-                            setDatosConsultas(consultas);
-
-                        // Se comprueba si ha cambiado el array del orden de pacientes del médico
-                        fetch("/medicos")
-                            .then(respuesta => {
-                                return respuesta.json()
-                            })
-                            .then(medicos => {
-                                for (let medico of medicos) {
-                                    if (medico.usuario === doc.usuario) {
-                                        if (JSON.stringify(medico) !== JSON.stringify(doc))
-                                            setDoc(medico);
-                                        break;
+                        let cambios = (JSON.stringify(consultas) !== JSON.stringify(datosConsultas));
+                        if (cambios) {
+                            let arrayConsultas;
+                            if (loggedIn) {
+                                // Queremos solo las consultas del médico actual
+                                arrayConsultas = []
+                                for (let consulta of consultas) {
+                                    if (consulta.medico === doc.usuario) {
+                                        arrayConsultas.push(consulta);
                                     }
                                 }
-                            })
-                        setinterfazLista(true);
+                            } else {
+                                arrayConsultas = [...consultas];
+                            }
+                            setDatosConsultas(arrayConsultas);
+                            log("Guardando cambios fetch");
+                        }
+
+                        // Se comprueba si ha cambiado el array del orden de pacientes del médico
+                        if (loggedIn) {
+                            await peticionHTML("/medicos")
+                                .then(medicos => {
+                                    for (let medico of medicos) {
+                                        if (medico.usuario === doc.usuario) {
+                                            if (JSON.stringify(medico) !== JSON.stringify(doc)) {
+                                                setDoc(medico);
+                                                log("Guardando cambios fetch");
+                                            }
+                                            break;
+                                        }
+                                    }
+                                })
+                        }
+                        setInterfazListaSeguro(true);
                     })
                     .catch(() => {
                         console.log("Hubo un fallo tratando de descargar los datos de los pacientes del BackEnd. Se carga la página igualmente.");
                         // El fetch falló, por lo que no tenemos que cargar nada más
-                        setinterfazLista(true);
+                        setInterfazListaSeguro(true);
                     });
-            } catch (e) {
-                console.log("Hubo un fallo tratando de descargar los datos de los pacientes del BackEnd. Se carga la página igualmente.");
-                // El fetch falló, por lo que no tenemos que cargar nada más
-                setinterfazLista(true);
+            } else if (sincronizarCambios) {
+                // Se lanzan las peticiones pendientes
+                lanzarFetchsPendientes()
+                    .then(() => {
+                        // Se actualizan las consultas
+                        if (consultasNuevas) {
+                            setDatosConsultas(consultasNuevas);
+                            asegurarSincronizacionConsultas()
+                                .then(() => {
+                                    setConsultasNuevas(undefined);
+                                    log("Consultas aseguradas :)");
+                                });
+                        }
+                        // Se actualiza el médico
+                        if (doctorNuevo) {
+                            setDoc(doctorNuevo);
+                            asegurarSincronizacionDoctor()
+                                .then(() => {
+                                    setDoctorNuevo(undefined);
+                                    log("Médico asegurado :)")
+                                });
+                        }
+                    });
             }
         }
 
@@ -516,98 +549,195 @@ function App() {
          * @returns respuesta del fetch de descarga de la lista de pacientes
          */
         const fetchDataPacientes = async () => {
-            return await fetch('/paciente');
+            return await peticionHTML('/paciente');
         }
+
+        /**
+         * Función que permite asegurar que se pueden seguir sincronizando las consultas de forma segura.
+         */
+        const asegurarSincronizacionConsultas = async () => {
+            const getConsultasBackEnd = async () => {
+                let consultas = await peticionHTML('/consultas');
+                // Nos quedamos solo con las consultas de nuestro médico
+                let consultasBackEnd = [];
+                for (let consulta of consultas) {
+                    if (consulta.medico === doc.usuario)
+                        consultasBackEnd.push(consulta);
+                }
+                return consultasBackEnd;
+            };
+
+            const arraysDiferentes = (array1, array2) => {
+                if (array1.length !== array2.length)
+                    return true;
+                let esta = false;
+                for (let elem1 of array1) {
+                    esta = false;
+                    for (let elem2 of array2) {
+                        if (JSON.stringify(elem1) === JSON.stringify(elem2)) {
+                            esta = true;
+                            break;
+                        }
+                    }
+                    if (!esta)
+                        return true;
+                }
+                return false;
+            };
+
+            // Se obtienen las consultas del BackEnd
+            let consultasBackEnd = await getConsultasBackEnd();
+
+            // Si las consultas del BackEnd no son válidas, no se cambia nada
+            if (!consultasBackEnd) {
+                return;
+            }
+
+            // Comprobamos si las consultas ya están actualizadas
+            let sin_actualizar = arraysDiferentes(consultasBackEnd, consultasNuevas);
+
+            // Si no están actualizadas, se espera a que las consultass locales coincidan con las del BackEnd
+            while (sin_actualizar) {
+                consultasBackEnd = await getConsultasBackEnd();
+                sin_actualizar = arraysDiferentes(consultasBackEnd, consultasNuevas);
+            }
+        };
+
+        /**
+         * Función que permite asegurar que se pueden seguir sincronizando el médico de forma segura.
+         */
+        const asegurarSincronizacionDoctor = async () => {
+            const getDoctorBackend = async () => {
+                let medicos = await peticionHTML('/medicos');
+                for (let medico of medicos) {
+                    if (medico.usuario === doctorNuevo.usuario) {
+                        return medico;
+                    }
+                }
+            };
+
+            // Se busca el médico de los datos del BackEnd
+            let doctorBackend = await getDoctorBackend();
+
+            // Si se ha especificado un doctor inválido, no se cambia nada
+            if (!doctorBackend) {
+                return;
+            }
+
+            // Comprobamos si el médico ya está actualizado
+            let sin_actualizar = (JSON.stringify(doctorNuevo) !== JSON.stringify(doctorBackend));
+
+            // Si no esstá actualizado, se espera a que el médico local coincida con el del BackEnd
+            while (sin_actualizar) {
+                doctorBackend = await getDoctorBackend();
+                sin_actualizar = (JSON.stringify(doctorNuevo) !== JSON.stringify(doctorBackend));
+            }
+        };
+
+        const setInterfazListaSeguro = (valor) => {
+            if (loggedIn !== undefined) {
+                setInterfazLista(valor);
+            }
+        };
 
         // Según se carga el valor de loggedIn en el useState inicial, se activa esta función.
         // Por ello, descartamos la primera ejecución de este useEffect con la variable de control useEffectListo
         if (!useEffectListo) {
             setUseEffectListo(true);
             return;
+        } else if (loggedIn === undefined) {
+            return;
         }
 
         // Recogemos los pacientes del BackEnd
         fetchDataPacientes()
-            .then(respuesta => {
-                return respuesta.json()
-            })
             .then(pacientes => {
-                let arrayTLP = [];
                 // Guardamos los pacientes en la lista general de pacientes.
-                for (let i in pacientes) {
-                    arrayTLP.push({cipa: pacientes[i].cipa, dni: pacientes[i].dni, nombre: pacientes[i].nombre, citas: pacientes[i].citas})
-                }
-                setDatosTodosLosPacientes(arrayTLP);
+                setDatosTodosLosPacientes(pacientes);
             })
             .catch(() => {
                 console.log("Hubo un fallo tratando de descargar los datos de los pacientes del BackEnd.");
             });
 
+        // Sincronizamos por primera vez las consultas
         fetchDataConsultas()
-            .catch();
+            .catch(() => setInterfazListaSeguro(true));
 
         // Buscamos cambios en los datos del BackEnd cada medio segundo para mantener los datos sicronizados
-        const timer = setInterval(fetchDataConsultas, 3000);
+        const timer = setInterval(fetchDataConsultas, 2000);
         return () => clearInterval(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loggedIn]);
+    }, [loggedIn, sincronizarCambios, consultasNuevas, doctorNuevo]);
 
     useEffect(() => {
+        /**
+         * Función que permite establecer el valor de loggedIn en función de la respuesta a un fetch a /medicos
+         */
         const fetchMedicos = async () => {
-            return await fetch("/medicos");
-        };
-        // Restauramos el valor de la cookie o le asignamos un valor por defecto
-        setCookie('usuarioMedico', (cookies.usuarioMedico? cookies.usuarioMedico : ""), { path: '/' });
-        fetchMedicos()
-            .then(respuesta => {
-                return respuesta.json()
-            })
-            .then(medicos => {
-                let medicoNoEncontrado = true;
-                for (let medico of medicos) {
-                    if (String(medico.usuario) === String(cookies.usuarioMedico)) {
-                        setDoc(medico);
-                        setLoggedIn(true);
-                        medicoNoEncontrado = false;
-                        break;
+            await fetch("/medicos")
+                .then(respuesta => respuesta.json())
+                .then(medicos => {
+                    let medicoNoEncontrado = true;
+                    for (let medico of medicos) {
+                        if (String(medico.usuario) === String(cookies.usuarioMedico)) {
+                            setDoc(medico);
+                            setLoggedIn(true);
+                            medicoNoEncontrado = false;
+                            break;
+                        }
                     }
-                }
-                if (medicoNoEncontrado)
+                    if (medicoNoEncontrado)
+                        setLoggedIn(false);
+                })
+                .catch(() => {
+                    // El fetch falló, por lo que no hemos iniciado sesión o el BackEnd está desconectado
                     setLoggedIn(false);
-            })
+                })
+        };
+        // Si iniciamos sesión sin recargar la página, no necesitamos actualizar nada aquí
+        if (loggedInComprobado) {
+            return;
+        }
+
+        // Restauramos el valor de la cookie o le asignamos un valor por defecto
+        if (!cookies.usuarioMedico)
+            setCookie('usuarioMedico', "", { path: '/' });
+
+        fetchMedicos()
             .catch(() => {
                 // El fetch falló, por lo que no hemos iniciado sesión o el BackEnd está desconectado
                 setLoggedIn(false);
-            })
-    }, [setCookie, cookies]);
+            });
+        setLoggedInComprobado(true);
+    }, [setCookie, cookies, loggedInComprobado]);
 
-    return (
-        interfazLista? <Router>
+    return (interfazLista? <Router>
               <div className="App">
                 <Routes>
-                    <Route path="/medico/lista_siguientes_pacientes" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaSiguientesPacientesMedico datosConsultas={datosConsultas} getConsultas={getConsultas} cambiarModoPaciente={cambiarModoPaciente} setLlamado={setLlamado} cambiarOrdenPacientes={cambiarOrdenPacientes}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/lista_completa_pacientes" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaCompletaPacientesMedico datosTodosLosPacientes={datosTodosLosPacientes} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/lista_pacientes_descartados" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaPacientesNoAtendidosMedico datosConsultas={datosConsultas}  datosPacientesNoAtendidos={getConsultas(datosConsultas, "PD")} cambiarModoPaciente={cambiarModoPaciente}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/login" element={loggedIn? <Navigate to={"/"}/> : <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><LoginMedico setLoggedIn={setLoggedIn} setDoc={setDoc} peticionHTML={peticionHTML}/><Footer/></>} />
+                    <Route path="/medico/lista_siguientes_pacientes" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaSiguientesPacientesMedico datosConsultas={datosConsultas} getConsultas={getConsultas} cambiarModoConsultaPaciente={cambiarModoConsultaPaciente} cambiarOrdenPacientes={cambiarOrdenPacientes}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/lista_completa_pacientes" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaCompletaPacientesMedico datosTodosLosPacientes={datosTodosLosPacientes} ordenarAlfabeticamente={ordenarAlfabeticamente} cambiarModoConsultaPaciente={cambiarModoConsultaPaciente} getConsultaFromNombrePaciente={getConsultaFromNombrePaciente}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/lista_pacientes_descartados" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><ListaPacientesNoAtendidosMedico datosConsultas={datosConsultas}  datosPacientesNoAtendidos={getConsultas(datosConsultas, "PD")} cambiarModoConsultaPaciente={cambiarModoConsultaPaciente}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/login" element={<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><LoginMedico setLoggedIn={setLoggedIn} setDoc={setDoctor}/><Footer/></>} />
                     <Route path="/medico/autenticar" element={<Navigate to={"/"}/>}/>
 
-                    <Route path="/medico/detalles_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><DetallesPaciente useQuery={useQuery} datosHistoriaClinica={datosHistoriaClinica} datosTodosLosPacientes={datosTodosLosPacientes} cambiarModoPaciente={cambiarModoPaciente} getIDSiguienteConsulta={getIDSiguienteConsulta} setLlamado={setLlamado} salaDeConsulta={doc.salaDeConsulta}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/nueva_consulta_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><NuevaConsulta useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/recetas_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><RecetasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <Navigate to="/medico/login" />} />
-                    <Route path="/medico/pruebas_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><PruebasMedicasPaciente useQuery={useQuery} datosTodosLosPacientes={datosTodosLosPacientes}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/detalles_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><DetallesPaciente useQuery={useQuery} datosHistoriaClinica={datosHistoriaClinica} getConsultaFromId={getConsultaFromId} cambiarModoConsultaPaciente={cambiarModoConsultaPaciente} getSiguienteConsulta={getSiguienteConsulta}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/nueva_consulta_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><NuevaConsulta useQuery={useQuery} getConsultaFromId={getConsultaFromId}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/recetas_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><RecetasPaciente useQuery={useQuery} getConsultaFromId={getConsultaFromId}/><Footer/></> : <Navigate to="/medico/login" />} />
+                    <Route path="/medico/pruebas_paciente/:id" element={loggedIn?<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><PruebasMedicasPaciente useQuery={useQuery} getConsultaFromId={getConsultaFromId}/><Footer/></> : <Navigate to="/medico/login" />} />
 
                     <Route path="/paciente/login" element={<><LoginKiosko /><Footer/></>} />
-                    <Route path="/paciente/login/dni" element={<><LoginKioskodni cambiarModoPaciente={cambiarModoPaciente} peticionHTML={peticionHTML}/><Footer/></>} />
-                    <Route path="/paciente/login/cipa" element={<><LoginKioskocipa cambiarModoPaciente={cambiarModoPaciente} peticionHTML={peticionHTML}/><Footer/></>}  />
+                    <Route path="/paciente/login/dni" element={<><LoginKioskodni/><Footer/></>} />
+                    <Route path="/paciente/login/cipa" element={<><LoginKioskocipa/><Footer/></>}  />
                     <Route path="/paciente/ticket" element={<><PacienteRegistradoKiosko useQuery={useQuery} salaDeEspera={salaDeEspera}/><Footer /></>}  />
 
-                    <Route path="/sala_de_espera" element={<ListaSalaDeEspera salaDeConsulta={doc.salaDeConsulta}/>} />
+                    <Route path="/sala_de_espera" element={<ListaSalaDeEspera salaDeConsulta={doc.salaDeConsulta} setSincronizarCambios={setSincronizarCambios}/>} />
 
-                    <Route path="/contacto" element={<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><Contacto /><Footer/></>} />
-                    <Route path="/" element={loggedIn? <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><Home cambiarModoPaciente={cambiarModoPaciente} getIDSiguienteConsulta={getIDSiguienteConsulta} doc={doc.nombre}/><Footer/></> : <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><HomePreLogin /><Footer/></>} />
+                    <Route path="/contacto" element={<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><Contacto/><Footer/></>} />
+                    <Route path="/" element={loggedIn? <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><Home cambiarModoConsultaPaciente={cambiarModoConsultaPaciente} getSiguienteConsulta={getSiguienteConsulta} doc={doc.nombre}/><Footer/></> : <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><HomePreLogin /><Footer/></>} />
+                    <Route path="*" element={<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><PaginaDeError/><Footer/></>} />
                 </Routes>
               </div>
-          </Router> : <></>
+          </Router> : <PaginaDeCarga/>
   );
 }
 

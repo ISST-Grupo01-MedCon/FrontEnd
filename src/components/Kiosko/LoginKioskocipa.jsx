@@ -1,5 +1,5 @@
-import {Alert, Button, Col, Container, Form, Image, Row} from "react-bootstrap";
-import React, {useState} from "react";
+import {Alert, Button, Col, Container, Form, Image, ListGroup, Row} from "react-bootstrap";
+import React, {useEffect, useState} from "react";
 import {greenButtonStyle} from "../../styles";
 import { useNavigate } from "react-router-dom";
 
@@ -7,60 +7,116 @@ export const LoginKioskocipa = (props) => {
     const navigate = useNavigate();
     const [CIPA, setCIPA] = useState("");
     const [showAlert, setShowAlert] = useState(false);
+    const [listaConsultas, setListaConsultas] = useState(false);
+    const [consultaElegida, setConsultaElegida] = useState();
     const [loading, setLoading] = useState(false);
+    const [useEffectListo, setUseEffectListo] = useState(false);
+    const [registroPaciente, setRegistroPaciente] = useState(false);
 
     const onChangeCIPA = (event) =>{
         setCIPA(event.target.value);
     }
     const submitCIPA = async (event) => {
         event.preventDefault();
-        // Activamos el spinner de carga
-        setLoading(true);
-        // Registramos el paciente
-        props.cambiarModoPaciente("registrado", CIPA, "kiosko");
-        try {
-            // Buscamos el ID del paciente (de su consulta)
-            let idPaciente;
-            let consultas = await (await fetch("/consultas")).json();
-            let pacientes = await (await  fetch("/paciente")).json();
-            // Buscamos el nombre del paciente por su CIPA, y con su nombre buscamos su consulta para obtener el ID
-            for (let paciente of pacientes) {
-                if (parseInt(paciente.cipa) === parseInt(CIPA)) {
-                    for (let consulta of consultas) {
-                        if (consulta.paciente === paciente.nombre) {
-                            idPaciente = consulta.id;
+        setRegistroPaciente(true);
+    }
+
+    useEffect(() => {
+        const registrarConsultaEnBackEnd = async (idConsulta) => {
+            await fetch("/paciente/registroKiosko/"+idConsulta, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        };
+
+        const cargarTicketID = (ticketID) => {
+            // Se desactiva el spinner de carga
+            setLoading(false);
+            // Finalmente cargamos la página del ticket
+            navigate("/paciente/ticket?ticketID="+ticketID);
+        };
+
+        if (useEffectListo) {
+            if (consultaElegida !== undefined) {
+                setLoading(true);
+                let consulta = listaConsultas[consultaElegida];
+                // Registramos el paciente en el BackEnd:
+                registrarConsultaEnBackEnd(consulta.id).catch(() => {
+                   console.log("Hubo un error al registrar la consulta con id "+consulta.id+" del paciente "+consulta.paciente+" desde el kiosko");
+                });
+                cargarTicketID(consulta.ticketId);
+                setListaConsultas(undefined);
+                setConsultaElegida(undefined);
+                return;
+            }
+            setRegistroPaciente(false);
+            // Activamos el spinner de carga
+            setLoading(true);
+            // Buscamos las consultas del paciente
+            fetch("/paciente")
+                .then(respuesta => respuesta.json())
+                .then(pacientes => {
+                    // Buscamos el nombre del paciente
+                    let nombrePaciente;
+                    for (let paciente of pacientes) {
+                        if (parseInt(paciente.cipa) === parseInt(CIPA)) {
+                            nombrePaciente = paciente.nombre;
                             break;
                         }
                     }
-                    break;
-                }
-            }
-            // Como todavía no tenemos su ticketID, ponemos uno que nos permita distinguir si ya tenemos el ticketID correcto
-            let ticketID = "ZZZ";
-            while (ticketID === "ZZZ") {
-                // Repetimos la petición hasta que el ticketID esté guardado
-                let consulta = await (await fetch("/consultas/"+idPaciente)).json();
-                if ((consulta.ticketId !== null) || (consulta.ticketId !== undefined) || (consulta.ticketId !== "")) {
-                    ticketID = consulta.ticketId;
-                    break;
-                }
-            }
-            // Finalmente cargamos la página del ticket
-            navigate("/paciente/ticket?ticketID="+ticketID);
-        } catch (e) {
-            // Si ha dado error alguno de los fetch, es porque el CIPA no se encuentra en la base de datos de pacientes con cita
-            setShowAlert(true);
+                    // Con el nombre del paciente buscamos sus consultas:
+                    fetch("/consultas")
+                        .then(respuesta => respuesta.json())
+                        .then(consultas => {
+                            let consultasPaciente = [];
+                            for (let consulta of consultas) {
+                                if (consulta.paciente === nombrePaciente) {
+                                    consultasPaciente.push(consulta);
+                                }
+                            }
+                            // Una vez que tenemos las consultas, comprobamos si hay una o si hay varias:
+                            if (consultasPaciente.length === 1) {
+                                // Si el paciente tiene una sola consulta, no se le pregunta nada más y se le muestra su ticketID
+                                // Se desactiva el spinner de carga
+                                setLoading(false);
+                                // Finalmente cargamos la página del ticket
+                                navigate("/paciente/ticket?ticketID="+consultasPaciente[0].ticketID);
+                            } else if (consultasPaciente.length > 1) {
+                                // Si el paciente tiene más de una cita, se le pregunta cuál desea registrar:
+                                setListaConsultas(consultasPaciente);
+                                // Se desactiva el spinner de carga
+                                setLoading(false);
+                            }
+                        })
+                })
+                .catch(() => {
+                    // Si ha dado error alguno de los fetch, es porque el CIPA no se encuentra en la base de datos de pacientes con cita
+                    setShowAlert(true);
+                });
+        } else {
+            setUseEffectListo(true);
         }
-        // Se desactiva el spinner de carga
-        setLoading(false);
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[registroPaciente, consultaElegida]);
+
     return(
         <Container style={{paddingTop: 40}}>
             <Row>
-                <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>Identificación CIPA</h1></Col>
+                <Col style={{textAlign: "center", fontWeight: "bold"}}><h1>{listaConsultas? "Seleccione la consulta que desea atender:" : "Identificación CIPA"}</h1></Col>
             </Row>
             <Row>
-                <Form onSubmit={(event) => {submitCIPA(event)}}>
+                {listaConsultas?
+                    <Row style={{paddingTop: 10}} className="justify-content-md-center">
+                        <Col xs={6}>
+                            <ListGroup>
+                                {listaConsultas.map((consulta, pos) => <ListGroup.Item key={pos} action onClick={() => setConsultaElegida(pos)}>{consulta.razonConsulta}</ListGroup.Item>)}
+                            </ListGroup>
+                        </Col>
+                    </Row>
+                    : <Form onSubmit={(event) => {submitCIPA(event)}}>
                     <Row style={{paddingTop: 10}} className="justify-content-md-center">
                         <Col xs={4}>
                             <img alt="Logo MedCon" src="/logo.png"/>
@@ -90,7 +146,7 @@ export const LoginKioskocipa = (props) => {
                                 </Alert>
                             </Col>
                         </Row> : <></>}
-                </Form>
+                </Form>}
             </Row>
         </Container>
     );

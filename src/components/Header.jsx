@@ -1,5 +1,5 @@
 import '../App.css';
-import React from "react";
+import React, {useEffect, useState} from "react";
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -12,12 +12,14 @@ import {useCookies} from "react-cookie";
 function Header(props) {
     const navigate = useNavigate();
     const [, , removeCookie] = useCookies(['medico']);
+    const [cerrarSesion, setCerrarSesion] = useState(false);
 
     const login_logout_action = async () => {
         if (props.loggedIn) {
             // Eliminamos la cookie del doctor
             removeCookie('usuarioMedico');
             // Esperamos a que la cookie se haya borrado del todo antes de irnos a la página de login
+            setCerrarSesion(true);
             await setTimeout(async () => {
                 await logout();
                 navigate("/medico/login");
@@ -33,6 +35,19 @@ function Header(props) {
         } catch(e) {}
         props.setLoggedIn(false);
     };
+
+    useEffect(() => {
+        if (cerrarSesion) {
+            // Eliminamos la cookie del doctor
+            removeCookie('usuarioMedico');
+            fetch("/medico/logout")
+                .then(() => {
+                    navigate("/medico/login");
+                    props.setLoggedIn(false);
+                });
+        }
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cerrarSesion]);
 
     return (
         <Navbar>

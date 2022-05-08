@@ -48,10 +48,15 @@ export const ListaSalaDeEspera = (props) => {
     const [fontWeight, setFontWeight] = useState("");
     const [repeticiones, setRepeticiones] = useState(0);
     const [, toggle] = useAudio("/windows-notificacion.mp3");
+    props.setSincronizarCambios(false);
 
     useEffect(() => {
         const fetchDataConsultas = async () => {
             return await fetch('/consultas');
+        }
+
+        const fetchDataMedicos = async () => {
+            return await fetch('/medicos/medico-consulta');
         }
 
         const parpadeo = () => {
@@ -62,32 +67,111 @@ export const ListaSalaDeEspera = (props) => {
 
         const timer = setInterval(() => {
             fetchDataConsultas()
-                .then(respuesta => {
-                    return respuesta.json()
-                })
+                .then(respuesta => respuesta.json())
                 .then(consultas => {
-                    let arrayPL = [];
+                    // Obtenemos la lista de médicos
+                    fetchDataMedicos()
+                        .then(respuesta => respuesta.json())
+                        .then(medico_consulta => {
+                            let arrayPL = [];
 
-                    // Buscamos los pacientes llamados de la lista de consultas descargada del BackEnd
-                    for (let i in consultas) {
-                        if ((consultas[i].ticketId !== null) && (consultas[i].ticketId !== undefined) && (consultas[i].ticketId !== "") && consultas[i].llamado) {
-                            // Si tiene ticketID y tiene llamado a true, es un paciente llamado desde la sala de espera
-                            arrayPL.push({ticketID: consultas[i].ticketId , id: parseInt(consultas[i].id), consulta: props.salaDeConsulta});
-                        }
-                    }
+                            // Buscamos los pacientes llamados de la lista de consultas descargada del BackEnd
+                            for (let i in consultas) {
+                                if ((consultas[i].ticketId !== null) && (consultas[i].ticketId !== undefined) && (consultas[i].ticketId !== "") && consultas[i].llamado) {
+                                    let salaDeConsulta = "SALA 2";
+                                    // Buscamos de la consulta su sala de consulta:
+                                    if (medico_consulta[consultas[i].medico])
+                                        salaDeConsulta = medico_consulta[consultas[i].medico];
+                                    // Si tiene ticketID y tiene llamado a true, es un paciente llamado desde la sala de espera
+                                    arrayPL.push({ticketID: consultas[i].ticketId , id: parseInt(consultas[i].id), consulta: salaDeConsulta});
+                                }
+                            }
 
-                    // Se buscan cambios en la primera fila
-                    if (((datosPacientesLlamados.length === 0) && (arrayPL.length > 0))|| ((arrayPL.length > 0) && (datosPacientesLlamados.length > 0) && (arrayPL[0].ticketID !== datosPacientesLlamados[0].ticketID)) || (repeticiones > 0)) {
-                        // Repetimos el parpadeo 9 + 1 = 10 veces
-                        setRepeticiones(repeticiones === 0? 9 : repeticiones - 1);
-                        if (repeticiones === 0)
-                            toggle();
-                        parpadeo();
-                    }
+                            // Se buscan diferencias:
+                            // Esta función devuelve el elemento pasado como parámetro si no está en el array
+                            let elementoEnArray = (elemento, array) => {
+                                let encontrado = false;
+                                for (let elem of array) {
+                                    if (JSON.stringify(elemento) === JSON.stringify(elem)) {
+                                        encontrado = true;
+                                        return;
+                                    }
+                                }
+                                if (!encontrado) return elemento;
+                            }
+                            let nuevoArrayPL;
+                            let mostrarEfectos = false;
+                            // Se comprueba elemento a elemento si tienen diferencias, sin importar el orden
+                            let cambio = parseInt(datosPacientesLlamados.length) !== parseInt(arrayPL.length);
+                            if (!cambio) {
+                                for (let consulta of datosPacientesLlamados) {
+                                    if (elementoEnArray(consulta, arrayPL)) {
+                                        cambio = true;
+                                        break;
+                                    }
+                                }
+                                if (cambio) {
+                                    // Un médico ha sustituido un paciente llamado por otro
+                                    // Ponemos dicho paciente arriba del todo:
+                                    let consultaLlamadaAnterior;
+                                    for (let consulta of datosPacientesLlamados) {
+                                        if (elementoEnArray(consulta, arrayPL)) {
+                                            consultaLlamadaAnterior = consulta;
+                                            break;
+                                        }
+                                    }
+                                    nuevoArrayPL = JSON.parse(JSON.stringify(datosPacientesLlamados));
+                                    nuevoArrayPL.splice(datosPacientesLlamados.indexOf(consultaLlamadaAnterior), 1);
+                                    let nuevasConsultasLlamadas = arrayPL.filter(x => elementoEnArray(x, nuevoArrayPL));
+                                    // Juntamos
+                                    nuevoArrayPL = nuevasConsultasLlamadas.concat(nuevoArrayPL);
+                                    // Se muestran los efectos para notificar a los pacientes llamados
+                                    setRepeticiones(0);
+                                    mostrarEfectos = true;
+                                } else {
+                                    // No ha cambiado nada
+                                    nuevoArrayPL = datosPacientesLlamados;
+                                }
+                            } else {
+                                let elementoEnArray = (elemento, array) => {
+                                    let encontrado = false;
+                                    for (let elem of array) {
+                                        if (JSON.stringify(elemento) === JSON.stringify(elem)) {
+                                            encontrado = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!encontrado) return elemento;
+                                }
+                                let quitados = datosPacientesLlamados.filter(x => elementoEnArray(x, arrayPL));
+                                let anadidos = arrayPL.filter(x => elementoEnArray(x, datosPacientesLlamados));
+                                if (quitados.length > 0) {
+                                    // Se han quitado pacientes llamados
+                                    nuevoArrayPL = JSON.parse(JSON.stringify(datosPacientesLlamados));
+                                    for (let quitado of quitados) {
+                                        nuevoArrayPL.splice(datosPacientesLlamados.indexOf(quitado), 1);
+                                    }
+                                } else if (anadidos.length > 0) {
+                                    // Se han añadido pacientes llamados
+                                    nuevoArrayPL = anadidos.concat(datosPacientesLlamados);
+                                    // Se muestran los efectos para notificar a los pacientes llamados
+                                    setRepeticiones(0);
+                                    mostrarEfectos = true;
+                                }
+                            }
 
-                    setDatosPacientesLlamados(arrayPL);
+                            // Se buscan cambios en la primera fila
+                            if (mostrarEfectos || (repeticiones > 0)) {
+                                // Repetimos el parpadeo 9 + 1 = 10 veces
+                                setRepeticiones(repeticiones === 0? 9 : repeticiones - 1);
+                                if (repeticiones === 0)
+                                    toggle();
+                                parpadeo();
+                            }
 
-                    clearInterval(timer);
+                            setDatosPacientesLlamados(nuevoArrayPL? nuevoArrayPL : []);
+                        })
+
                 })
                 .catch(() => {
                     console.log("Se ha producido un error realizando el fetch de la lista de consultas del BackEnd.");

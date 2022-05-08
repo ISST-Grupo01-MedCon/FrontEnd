@@ -27,7 +27,7 @@ export const NuevaConsulta = (props) => {
     };
     return(
         <Container fluid="true">
-            <CabeceraPaciente volver={volver} id={id} datosTodosLosPacientes={props.datosTodosLosPacientes}/>
+            <CabeceraPaciente volver={volver} id={id} nombre={props.getConsultaFromId(id).paciente}/>
             <Row>
                 <Col md={{offset: 1, span: 5}}>
                     <h3>Nueva consulta</h3>

@@ -35,7 +35,7 @@ export const RecetasPaciente = (props) => {
     };
     return(
         <Container fluid="true">
-            <CabeceraPaciente volver={volver} id={id} datosTodosLosPacientes={props.datosTodosLosPacientes}/>
+            <CabeceraPaciente volver={volver} id={id} nombre={props.getConsultaFromId(id).paciente}/>
             <Row>
                 <Col md={{offset: 1, span: 5}}>
                     <h3>Recetas</h3>
