@@ -86,7 +86,7 @@ export const DetallesPaciente = (props) => {
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irANuevaConsultaPaciente}>Nueva consulta</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irARecetasPaciente}>Ver recetas</Button></Row>
                     <Row><Button variant="light" size="lg" style={greenButtonStyle} onClick={irAPruebasPaciente}>Pruebas médicas</Button></Row>
-                    {((from !== "tp") && (from !== "pd")) ? <Row>{siguienteConsulta? <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.cambiarModoConsultaPaciente("atendido", id, "idConsulta"); navigate("/medico/detalles_paciente/"+siguienteConsulta.id);}}>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button>}</Row> : <></>}
+                    {((from !== "tp") && (from !== "pd")) ? <Row>{siguienteConsulta? <Button variant="light" size="lg" style={greenButtonStyle} onClick={() => {props.cambiarModoConsultaPaciente("atendido", id, "idConsulta"); props.cambiarModoConsultaPaciente("llamado", siguienteConsulta, "consulta"); navigate("/medico/detalles_paciente/"+siguienteConsulta.id);}}>Siguiente paciente</Button> : <Button variant="light" size="lg" style={greenButtonStyle} disabled>Siguiente paciente</Button>}</Row> : <></>}
                 </Col>
             </Row>
         </Container>
