@@ -201,7 +201,7 @@ export const ListaSalaDeEspera = (props) => {
                 </tbody>
             </Table>
             <ReactPlayer 
-            url={require('../../audio/windows-notificacion.mp3')}
+            url={'/windows-notificacion.mp3'}
             width="0%"
             height="0%"
             playing
