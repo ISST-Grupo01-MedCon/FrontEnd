@@ -17,7 +17,7 @@ export const Home = (props) => {
                     <Col>
                         <Stack style={{border: "none"}} gap={5}>
                             <Row style={{justifyContent: "center", paddingTop: 150}}><Button style={{...blueButton, height: 150, width: 400, fontSize: 30}} onClick={() => navigate("/medico/lista_siguientes_pacientes")}  size="lg">Lista de pacientes</Button></Row>
-                            <Row style={{justifyContent: "center"}}><Button style={{...blueButton, height: 150, width: 400, fontSize: 30}} onClick={() =>  {props.cambiarModoConsultaPaciente("atendido", siguienteConsulta, "idConsulta"); navigate("/medico/detalles_paciente/"+siguienteConsulta.id);}} size="lg">Llamar al siguiente paciente</Button></Row>
+                            <Row style={{justifyContent: "center"}}><Button style={{...blueButton, height: 150, width: 400, fontSize: 30}} onClick={() =>  {props.cambiarModoConsultaPaciente("llamado", siguienteConsulta, "idConsulta"); navigate("/medico/detalles_paciente/"+siguienteConsulta.id);}} size="lg">Llamar al siguiente paciente</Button></Row>
                         </Stack>
                     </Col>
                 </Row>

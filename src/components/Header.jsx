@@ -57,12 +57,12 @@ function Header(props) {
                 <Navbar.Collapse className="justify-content-end">
                     <Navbar.Text>
                         <Container fluid>
-                            <Row>
+                            {props.salaDeEspera? <></> : <Row>
                                 {props.mostrarHomeyCola? <Col md="auto"><Button onClick={() => navigate("/")} variant="light" size="lg" style={whiteNoBorderButton}>Home</Button></Col> : <></>}
                                 {props.mostrarHomeyCola? <Col md="auto"><Button onClick={() => navigate("/medico/lista_siguientes_pacientes")} variant="light" size="lg" style={whiteNoBorderButton}>Gestión de la cola</Button></Col> : <></>}
                                 <Col md="auto"><Button onClick={() => navigate("/contacto")} variant="light" size="lg" style={whiteNoBorderButton}>Contacto</Button></Col>
                                 <Col md="auto"><Button onClick={login_logout_action} variant="light" size="lg" style={greenButtonStyle}>{props.loggedIn? "Logout" : "Login"}</Button></Col>
-                            </Row>
+                            </Row>}
                         </Container>
                     </Navbar.Text>
                 </Navbar.Collapse>

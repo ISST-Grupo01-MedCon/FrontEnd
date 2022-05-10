@@ -67,6 +67,17 @@ export const errorPageMargins = {
     paddingTop: "300px"
 };
 
+export const fixedFooterStyle = {
+    backgroundColor: "#23216e",
+    color: "#FFFFFF",
+    textAlign: "center",
+    justifyContent: "space-around",
+    position:"absolute",
+    left:0,
+    bottom:0,
+    right:0
+};
+
 export const ladoCruzPequena = 35;
 export const ladoLapizPequeno = 30;
 

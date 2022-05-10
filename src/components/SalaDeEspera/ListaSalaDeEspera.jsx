@@ -89,6 +89,9 @@ export const ListaSalaDeEspera = (props) => {
                                 }
                             }
 
+                            // Invertimos el orden del array obtenido para asegurarnos de que las últimas consultas modificadas están arriba
+                            arrayPL = arrayPL.reverse();
+
                             // Se buscan diferencias:
                             // Esta función devuelve el elemento pasado como parámetro si no está en el array
                             let elementoEnArray = (elemento, array) => {

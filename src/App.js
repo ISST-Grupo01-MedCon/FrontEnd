@@ -464,7 +464,13 @@ function App() {
                     await peticionHTML(fetchs[i].URL, fetchs[i].metodo, fetchs[i].body);
                     fetchs.splice(i, 1);
                 } catch (e) {
-                    console.log("Hubo un error realizando un fetch pendiente");
+                    console.log("Hubo un error realizando un fetch pendiente. Se va a reintentar.");
+                    try {
+                        await peticionHTML(fetchs[i].URL, fetchs[i].metodo, fetchs[i].body);
+                        console.log("En el segundo intento sí que se ha conseguido realizar el fetch.");
+                    } catch (e) {
+                        console.log("Volvió a fallar el fetch. Se descarta.")
+                    }
                 }
             }
             setFetchsPendientes(fetchs);
@@ -473,9 +479,16 @@ function App() {
         /**
          * Función que descarga la lista de consultas completa y/o establece nuevas consultas y/o médicos.
          */
-        const fetchDataConsultas = async () => {
-            if (!consultasNuevas && !doctorNuevo && sincronizarCambios) {
-                await peticionHTML('/consultas')
+        const fetchDataConsultas = () => {
+            if (sincronizarCambios) {
+                if (fetchsPendientes) {
+                    lanzarFetchsPendientes()
+                        .then(() => {
+                            actualizarConsultasLocales();
+                            actualizarMedicoLocal();
+                        })
+                }
+                peticionHTML('/consultas')
                     .then(async consultas => {
                         // Guardamos todas las consultas en datosConsultas solo si ha habido cambios:
                         let cambios = (JSON.stringify(consultas) !== JSON.stringify(datosConsultas));
@@ -492,8 +505,11 @@ function App() {
                             } else {
                                 arrayConsultas = [...consultas];
                             }
-                            setDatosConsultas(arrayConsultas);
-                            log("Guardando cambios fetch");
+                            if (!consultasNuevas) {
+                                setDatosConsultas(arrayConsultas);
+                                log("Guardando cambios fetch");
+                            }
+                            setInterfazListaSeguro(true);
                         }
 
                         // Se comprueba si ha cambiado el array del orden de pacientes del médico
@@ -503,46 +519,49 @@ function App() {
                                     for (let medico of medicos) {
                                         if (medico.usuario === doc.usuario) {
                                             if (JSON.stringify(medico) !== JSON.stringify(doc)) {
-                                                setDoc(medico);
-                                                log("Guardando cambios fetch");
+                                                if (!doctorNuevo) {
+                                                    setDoc(medico);
+                                                    log("Guardando cambios fetch");
+                                                }
+                                                setInterfazListaSeguro(true);
                                             }
                                             break;
                                         }
                                     }
                                 })
                         }
-                        setInterfazListaSeguro(true);
                     })
                     .catch(() => {
                         console.log("Hubo un fallo tratando de descargar los datos de los pacientes del BackEnd. Se carga la página igualmente.");
                         // El fetch falló, por lo que no tenemos que cargar nada más
                         setInterfazListaSeguro(true);
                     });
-            } else if (sincronizarCambios) {
-                // Se lanzan las peticiones pendientes
-                lanzarFetchsPendientes()
-                    .then(() => {
-                        // Se actualizan las consultas
-                        if (consultasNuevas) {
-                            setDatosConsultas(consultasNuevas);
-                            asegurarSincronizacionConsultas()
-                                .then(() => {
-                                    setConsultasNuevas(undefined);
-                                    log("Consultas aseguradas :)");
-                                });
-                        }
-                        // Se actualiza el médico
-                        if (doctorNuevo) {
-                            setDoc(doctorNuevo);
-                            asegurarSincronizacionDoctor()
-                                .then(() => {
-                                    setDoctorNuevo(undefined);
-                                    log("Médico asegurado :)")
-                                });
-                        }
-                    });
             }
         }
+
+        const actualizarConsultasLocales = () => {
+            // Se actualizan las consultas
+            if (consultasNuevas) {
+                setDatosConsultas(consultasNuevas);
+                asegurarSincronizacionConsultas()
+                    .then(() => {
+                        setConsultasNuevas(undefined);
+                        log("Consultas aseguradas :)");
+                    });
+            }
+        };
+
+        const actualizarMedicoLocal = () => {
+            // Se actualiza el médico
+            if (doctorNuevo) {
+                setDoc(doctorNuevo);
+                asegurarSincronizacionDoctor()
+                    .then(() => {
+                        setDoctorNuevo(undefined);
+                        log("Médico asegurado :)")
+                    });
+            }
+        };
 
         /**
          * Función que descarga la lista de pacientes
@@ -596,11 +615,20 @@ function App() {
             // Comprobamos si las consultas ya están actualizadas
             let sin_actualizar = arraysDiferentes(consultasBackEnd, consultasNuevas);
 
+            // Contamos el número de veces que se ha hecho fetch y que las comsultas han diferido respecto a las locales
+            let repeticiones = 0;
+
             // Si no están actualizadas, se espera a que las consultass locales coincidan con las del BackEnd
             while (sin_actualizar) {
+                if (repeticiones > 10) {
+                    console.log("Se deja de asegurar las consultas al sobrepasar las 10 vueltas.");
+                    break;
+                }
                 consultasBackEnd = await getConsultasBackEnd();
                 sin_actualizar = arraysDiferentes(consultasBackEnd, consultasNuevas);
+                repeticiones++;
             }
+            log("Se han asegurado las consultas tras "+repeticiones+" repeticiones.");
         };
 
         /**
@@ -627,11 +655,20 @@ function App() {
             // Comprobamos si el médico ya está actualizado
             let sin_actualizar = (JSON.stringify(doctorNuevo) !== JSON.stringify(doctorBackend));
 
+            // Contamos el número de veces que se ha hecho fetch y que las comsultas han diferido respecto a las locales
+            let repeticiones = 0;
+
             // Si no esstá actualizado, se espera a que el médico local coincida con el del BackEnd
             while (sin_actualizar) {
+                if (repeticiones > 10) {
+                    console.log("Se deja de asegurar el médico al sobrepasar las 10 vueltas.");
+                    break;
+                }
                 doctorBackend = await getDoctorBackend();
                 sin_actualizar = (JSON.stringify(doctorNuevo) !== JSON.stringify(doctorBackend));
+                repeticiones++;
             }
+            log("Se ha asegurado el médico tras "+repeticiones+" repeticiones.");
         };
 
         const setInterfazListaSeguro = (valor) => {
@@ -660,8 +697,7 @@ function App() {
             });
 
         // Sincronizamos por primera vez las consultas
-        fetchDataConsultas()
-            .catch(() => setInterfazListaSeguro(true));
+        fetchDataConsultas();
 
         // Buscamos cambios en los datos del BackEnd cada medio segundo para mantener los datos sicronizados
         const timer = setInterval(fetchDataConsultas, 2000);
@@ -730,7 +766,7 @@ function App() {
                     <Route path="/paciente/login/cipa" element={<><LoginKioskocipa/><Footer/></>}  />
                     <Route path="/paciente/ticket" element={<><PacienteRegistradoKiosko useQuery={useQuery} salaDeEspera={salaDeEspera}/><Footer /></>}  />
 
-                    <Route path="/sala_de_espera" element={<ListaSalaDeEspera salaDeConsulta={doc.salaDeConsulta} setSincronizarCambios={setSincronizarCambios}/>} />
+                    <Route path="/sala_de_espera" element={<><Header salaDeEspera={true}/><ListaSalaDeEspera salaDeConsulta={doc.salaDeConsulta} setSincronizarCambios={setSincronizarCambios}/><Footer salaDeEspera={true}/></>} />
 
                     <Route path="/contacto" element={<><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={loggedIn}/><Contacto/><Footer/></>} />
                     <Route path="/" element={loggedIn? <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><Home cambiarModoConsultaPaciente={cambiarModoConsultaPaciente} getSiguienteConsulta={getSiguienteConsulta} doc={doc.nombre}/><Footer/></> : <><Header setLoggedIn={setLoggedIn} loggedIn={loggedIn} mostrarHomeyCola={false}/><HomePreLogin /><Footer/></>} />
